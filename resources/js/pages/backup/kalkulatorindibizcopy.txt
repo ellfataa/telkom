@@ -1,0 +1,54 @@
+<template>
+    <tbody class="divide-y">
+        <tr class="transition-colors hover:bg-muted/30">
+            <td class="px-6 py-4 text-sm font-medium whitespace-nowrap">1</td>
+            <td class="px-6 py-4 text-sm font-medium whitespace-nowrap">Nama Produk</td>
+            <td class="px-6 py-4 text-sm font-medium whitespace-nowrap">{{ formatCurrency(harga_produk) }}</td>
+            <td class="px-6 py-4 text-sm font-medium whitespace-nowrap">
+                <div class="flex items-center justify-center space-x-2 p-4">
+                    <Button type="button" @click="kurang" class="flex h-6 w-6 items-center rounded border bg-transparent text-black hover:bg-gray-300"
+                        >-</Button
+                    >
+                    <input type="number" v-model="kuantitas" class="w-full max-w-[6rem] min-w-[3rem] rounded border px-1 text-center" />
+                    <Button
+                        type="button"
+                        @click="tambah"
+                        class="flex h-6 w-6 items-center justify-center rounded border bg-transparent text-black hover:bg-gray-300"
+                        >+</Button
+                    >
+                </div>
+            </td>
+            <td class="px-6 py-4 text-sm font-medium whitespace-nowrap">
+                <select v-model="otcKategori" id="" class="w-auto rounded border p-2">
+                    <option value="" disabled>Pilih Kategori</option>
+                    <option value="1">FREE/MO</option>
+                    <option value="2">AO DISC</option>
+                    <option value="3">AO NORMAL</option>
+                </select>
+            </td>
+            <td class="px-6 py-4 text-sm font-medium whitespace-nowrap">
+                {{ formatCurrency(hargaOtc) }}
+            </td>
+
+            <td class="px-6 py-4 text-sm font-medium whitespace-nowrap">
+                {{ formatCurrency(hargaPpn) }}
+            </td>
+            <td class="">
+                <div class="flex items-center justify-center space-x-1">
+                    <input type="number" v-model="durasiAngka" class="w-8 rounded border px-1 text-center" />
+                    <select class="w-auto rounded border px-1 text-left" v-model="bulanTahun">
+                        <option value="" disabled>Pilih durasi</option>
+                        <option value="1">Bulan</option>
+                        <option value="2">Tahun</option>
+                    </select>
+                </div>
+            </td>
+            <td class="px-6 py-4 text-sm font-medium whitespace-nowrap">
+                {{ formatCurrency(hargaDurasi) }}
+            </td>
+            <td class="px-6 py-4 text-sm font-medium whitespace-nowrap">
+                {{ formatCurrency(totalhargaOtc) }}
+            </td>
+        </tr>
+    </tbody>
+</template>

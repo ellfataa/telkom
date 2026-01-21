@@ -1,0 +1,116 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Carbon\Carbon;
+use Illuminate\Support\Str;
+
+class TransaksiControllerCopy extends Controller
+{
+    public function store(Request $request)
+    {
+        // 1. Validasi Input
+        $request->validate([
+            'total_harga' => 'required|integer',
+            'items' => 'required|array|min:1',
+            'items.*.id_produk' => 'required|string',
+            'items.*.kuantitas' => 'required|integer|min:1',
+            'items.*.harga_produk' => 'required|integer',
+            'items.*.subtotal' => 'required|integer',
+        ]);
+
+        // 2. Mulai Database Transaction
+        DB::beginTransaction();
+
+        try {
+            // Generate ID Transaksi Unik (Contoh: TRX-20240520-XXXX)
+            $idTransaksi = 'TRX-' . date('Ymd') . '-' . strtoupper(Str::random(4));
+
+            // 3. Simpan ke Tabel Parent (transaksi)
+            DB::table('transaksi')->insert([
+                'id_transaksi' => $idTransaksi,
+                'ttl_transaksi' => Carbon::now(),
+                'total_harga' => $request->total_harga,
+            ]);
+
+            // 4. Simpan ke Tabel Children (transaksi_children)
+            $items = [];
+            foreach ($request->items as $item) {
+                $items[] = [
+                    'id_transaksi' => $idTransaksi,
+                    'id_produk' => $item['id_produk'],
+                    'kuantitas' => $item['kuantitas'],
+                    'harga_produk' => $item['harga_produk'],
+                    'subtotal' => $item['subtotal'],
+                ];
+            }
+
+            DB::table('transaksi_children')->insert($items);
+
+            // Jika semua berhasil, simpan permanen
+            DB::commit();
+
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Transaksi berhasil disimpan',
+                'id_transaksi' => $idTransaksi
+            ], 201);
+
+        } catch (\Exception $e) {
+            // Jika ada satu saja yang gagal, batalkan semua (rollback)
+            DB::rollBack();
+
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Gagal menyimpan transaksi: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function index()
+    {
+        // Mengambil semua transaksi beserta itemnya (menggunakan Join)
+        $data = DB::table('transaksi')
+            ->select('transaksi.*', DB::raw('count(transaksi_children.id) as total_item'))
+            ->leftJoin('transaksi_children', 'transaksi.id_transaksi', '=', 'transaksi_children.id_transaksi')
+            ->groupBy('transaksi.id_transaksi', 'transaksi.ttl_transaksi', 'transaksi.total_harga')
+            ->orderBy('ttl_transaksi', 'desc')
+            ->get();
+
+        return response()->json($data);
+    }
+
+    public function show($id)
+    {
+        // Ambil SEMUA data di tabel children tanpa filter dulu
+        // $allChildren = DB::table('transaksi_children')->get();
+
+        // Ambil data yang filternya kita curigai bermasalah
+        // $filteredChildren = DB::table('transaksi_children')
+        //     ->where('id_transaksi', 'LIKE', trim($id))
+        //     ->get();
+
+        // 1. Ambil data Header Transaksi
+        $header = DB::table('transaksi')->where('id_transaksi', $id)->first();
+
+        if (!$header) {
+            return response()->json(['message' => 'Transaksi tidak ditemukan'], 404);
+        }
+
+        // 2. Ambil data Detail dengan JOIN ke tabel produk
+        // Gunakan trim($id) untuk memastikan tidak ada spasi tersembunyi
+        $details = DB::table('transaksi_children')
+            ->leftJoin('produk', 'transaksi_children.id_produk', '=', 'produk.id_produk')
+            ->where('transaksi_children.id_transaksi', $id)
+            ->select('transaksi_children.*', 'produk.*')
+            ->get();
+
+
+        return response()->json([
+            'transaksi' => $header,
+            'items' => $details
+        ]);
+    }
+}
