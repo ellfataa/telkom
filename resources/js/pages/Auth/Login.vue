@@ -26,62 +26,73 @@ const submit = () => {
     <Head title="Log in">
         <link rel="preconnect" href="https://fonts.googleapis.com">
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous">
-        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+        <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     </Head>
 
-    <div class="min-h-screen flex bg-white dark:bg-[#0a0a0a] font-['Inter'] selection:bg-red-500 selection:text-white">
+    <div class="min-h-screen w-full flex flex-col lg:flex-row font-['Plus_Jakarta_Sans',sans-serif] selection:bg-red-500 selection:text-white dark:bg-[#050505] dark:text-gray-100 overflow-hidden relative isolate">
 
-        <div class="hidden lg:flex w-[55%] relative overflow-hidden bg-gray-900 items-center justify-center">
-            <div class="absolute inset-0 bg-gradient-to-br from-red-700 via-red-800 to-red-950 z-0"></div>
+        <div class="relative w-full lg:w-[50%] h-[15vh] lg:h-auto lg:min-h-screen order-first overflow-hidden bg-gray-900 border-b lg:border-b-0 lg:border-r border-gray-200 dark:border-gray-800 lg:sticky lg:top-0">
 
-            <div class="absolute inset-0 opacity-10 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] mix-blend-overlay"></div>
+            <img
+                src="/image/auth.jpg"
+                alt="Telkom Indonesia Authentication"
+                class="absolute inset-0 w-full h-full object-cover object-center animate-slow-pan"
+            >
 
-            <div class="absolute -top-40 -right-40 w-96 h-96 bg-red-500 rounded-full blur-[128px] opacity-40 animate-pulse"></div>
-            <div class="absolute bottom-0 left-0 w-80 h-80 bg-black rounded-full blur-[100px] opacity-30"></div>
+            <div class="absolute inset-0 bg-gradient-to-t from-[#050505] via-gray-900/50 to-transparent lg:bg-gradient-to-r lg:from-[#050505] lg:via-gray-900/30 lg:to-transparent"></div>
 
-            <div class="relative z-10 text-center px-16 max-w-2xl">
-                <div class="mb-8 flex justify-center">
-                    <div class="w-20 h-20 bg-white/10 backdrop-blur-lg border border-white/20 rounded-2xl flex items-center justify-center shadow-2xl">
-                        <svg class="w-10 h-10 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.384-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
-                        </svg>
+            <div class="absolute inset-0 opacity-20 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] mix-blend-overlay"></div>
+
+            <div class="hidden lg:flex absolute bottom-0 left-0 w-full p-12 z-20 flex-col justify-end h-full">
+                 <div class="bg-white/10 backdrop-blur-md border border-white/10 p-6 rounded-3xl shadow-2xl animate-fade-in-up delay-300 lg:mb-6">
+                    <div class="flex items-start gap-4">
+                        <div class="p-3 bg-gradient-to-br from-red-600 to-red-700 rounded-2xl shrink-0 shadow-lg shadow-red-600/20 flex items-center justify-center">
+                            <svg class="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                            </svg>
+                        </div>
+                        <div>
+                            <h3 class="text-xl font-bold text-white mb-1 tracking-tight">Autentikasi</h3>
+                            <p class="text-gray-200 text-sm leading-relaxed font-medium opacity-90">
+                                Mari bersama meningkatkan efektivitas dan transparansi penawaran produk TelkomGroup melalui sistem terintegrasi.
+                            </p>
+                        </div>
                     </div>
-                </div>
-                <h2 class="text-4xl md:text-5xl font-bold text-white tracking-tight leading-tight mb-6">
-                    Connect the World <br> with <span class="text-transparent bg-clip-text bg-gradient-to-r from-red-200 to-white">Innovation</span>
-                </h2>
-                <p class="text-red-100/80 text-lg leading-relaxed font-light">
-                    Sistem manajemen terintegrasi untuk mendukung produktivitas dan konektivitas digital Indonesia.
-                </p>
-            </div>
-
-            <div class="absolute bottom-8 text-white/20 text-xs tracking-widest uppercase">
-                © Telkom Indonesia Digital Ecosystem
+                 </div>
             </div>
         </div>
 
-        <div class="w-full lg:w-[45%] flex flex-col justify-center items-center p-8 lg:p-16 bg-white dark:bg-[#0a0a0a] relative">
+        <div class="w-full lg:w-[50%] flex flex-col justify-center relative isolate bg-white dark:bg-[#050505] transition-colors duration-300 py-8 lg:py-12 min-h-full">
 
-            <div class="lg:hidden absolute top-8 left-8 flex items-center gap-2">
-                 <div class="w-8 h-8 bg-red-600 rounded-lg flex items-center justify-center text-white font-bold">T</div>
-                 <span class="font-bold text-gray-900 dark:text-white">TelkomPortal</span>
+            <div class="absolute inset-0 -z-10 h-full w-full bg-[linear-gradient(to_right,#8080800a_1px,transparent_1px),linear-gradient(to_bottom,#8080800a_1px,transparent_1px)] bg-[size:14px_24px]"></div>
+            <div class="absolute top-0 right-0 w-full h-full overflow-hidden pointer-events-none -z-10">
+                 <div class="absolute top-[5%] right-[5%] w-[400px] h-[400px] bg-red-500/5 rounded-full blur-[120px]"></div>
             </div>
 
-            <div class="w-full max-w-[420px]">
-                <div class="mb-10">
-                    <h1 class="text-3xl font-extrabold text-gray-900 dark:text-white tracking-tight">Selamat Datang</h1>
-                    <p class="text-gray-500 mt-2 text-sm dark:text-gray-400 font-light">
+            <div class="lg:hidden absolute top-4 left-6 flex items-center gap-2">
+                 <div class="w-8 h-8 bg-gradient-to-br from-red-600 to-red-700 rounded-lg flex items-center justify-center text-white font-bold shadow-md">T</div>
+                 <span class="font-bold text-gray-900 dark:text-white tracking-tight">Telkom<span class="text-red-600">Portal</span></span>
+            </div>
+
+            <div class="w-full max-w-[480px] mx-auto px-6 lg:px-12 animate-fade-in-up">
+
+                <div class="mb-8">
+                    <h1 class="text-3xl lg:text-4xl font-extrabold text-gray-900 dark:text-white tracking-tight mb-2">
+                        Selamat Datang
+                    </h1>
+                    <p class="text-base text-gray-500 dark:text-gray-400">
                         Masuk ke akun Anda untuk mengakses dashboard.
                     </p>
                 </div>
 
-                <div v-if="status" class="mb-6 p-4 rounded-xl bg-green-50 border border-green-100 text-green-700 text-sm font-medium flex items-center gap-2">
-                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                <div v-if="status" class="mb-6 p-4 rounded-2xl bg-green-50 border border-green-100 text-green-700 text-sm font-semibold flex items-center gap-3 animate-fade-in-up">
+                    <svg class="w-5 h-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                     {{ status }}
                 </div>
 
-                <form @submit.prevent="submit" class="space-y-6">
-                    <div class="space-y-2">
+                <form @submit.prevent="submit" class="space-y-5">
+
+                    <div class="space-y-1.5">
                         <label for="email" class="text-sm font-semibold text-gray-700 dark:text-gray-300 ml-1">Email</label>
                         <div class="relative group">
                             <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-gray-400 group-focus-within:text-red-600 transition-colors">
@@ -95,20 +106,22 @@ const submit = () => {
                                 v-model="form.email"
                                 required
                                 autofocus
-                                class="w-full pl-12 pr-4 py-3.5 bg-gray-50 border border-gray-200 text-gray-900 rounded-xl focus:bg-white focus:ring-2 focus:ring-red-100 focus:border-red-500 transition-all outline-none placeholder-gray-400 dark:bg-gray-900 dark:border-gray-800 dark:text-white"
+                                class="w-full pl-12 pr-4 py-3 bg-gray-50 hover:bg-gray-100/50 border border-gray-200 text-gray-900 rounded-2xl focus:bg-white focus:ring-4 focus:ring-red-500/10 focus:border-red-500 transition-all outline-none placeholder-gray-400 dark:bg-gray-900/50 dark:hover:bg-gray-900 dark:border-gray-800 dark:text-white dark:focus:bg-gray-900"
                                 placeholder="nama@telkom.co.id"
                             />
                         </div>
-                        <div v-if="form.errors.email" class="text-red-500 text-xs font-medium ml-1 mt-1">{{ form.errors.email }}</div>
+                        <div v-if="form.errors.email" class="text-red-600 text-xs font-medium ml-1 flex items-center gap-1 mt-1">
+                            {{ form.errors.email }}
+                        </div>
                     </div>
 
-                    <div class="space-y-2">
-                        <!-- <div class="flex justify-between items-center ml-1">
+                    <div class="space-y-1.5">
+                        <div class="flex justify-between items-center ml-1">
                             <label for="password" class="text-sm font-semibold text-gray-700 dark:text-gray-300">Password</label>
-                            <Link v-if="canResetPassword" :href="route('password.request')" class="text-xs text-red-600 hover:text-red-700 font-semibold transition-colors">
+                            <Link v-if="canResetPassword" :href="route('password.request')" class="text-xs text-red-600 hover:text-red-700 font-bold transition-colors">
                                 Lupa Password?
                             </Link>
-                        </div> -->
+                        </div>
                         <div class="relative group">
                             <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-gray-400 group-focus-within:text-red-600 transition-colors">
                                 <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -120,53 +133,94 @@ const submit = () => {
                                 type="password"
                                 v-model="form.password"
                                 required
-                                class="w-full pl-12 pr-4 py-3.5 bg-gray-50 border border-gray-200 text-gray-900 rounded-xl focus:bg-white focus:ring-2 focus:ring-red-100 focus:border-red-500 transition-all outline-none placeholder-gray-400 dark:bg-gray-900 dark:border-gray-800 dark:text-white"
+                                class="w-full pl-12 pr-4 py-3 bg-gray-50 hover:bg-gray-100/50 border border-gray-200 text-gray-900 rounded-2xl focus:bg-white focus:ring-4 focus:ring-red-500/10 focus:border-red-500 transition-all outline-none placeholder-gray-400 dark:bg-gray-900/50 dark:hover:bg-gray-900 dark:border-gray-800 dark:text-white dark:focus:bg-gray-900"
                                 placeholder="••••••••"
                             />
                         </div>
-                        <div v-if="form.errors.password" class="text-red-500 text-xs font-medium ml-1 mt-1">{{ form.errors.password }}</div>
+                        <div v-if="form.errors.password" class="text-red-600 text-xs font-medium ml-1 mt-1">{{ form.errors.password }}</div>
                     </div>
 
-                    <!-- <div class="flex items-center justify-between pt-2">
-                        <label class="flex items-center cursor-pointer">
+                    <div class="flex items-center">
+                        <label class="flex items-center cursor-pointer group">
                             <input
                                 type="checkbox"
                                 v-model="form.remember"
-                                class="w-4 h-4 text-red-600 border-gray-300 rounded focus:ring-red-500 transition-all"
+                                class="w-4 h-4 text-red-600 border-gray-300 rounded focus:ring-red-500 transition-all cursor-pointer"
                             />
-                            <span class="ml-2 text-sm text-gray-600 dark:text-gray-400">Ingat Saya</span>
+                            <span class="ml-2 text-sm text-gray-500 group-hover:text-gray-700 dark:text-gray-400 dark:group-hover:text-gray-300 transition-colors">Ingat Saya</span>
                         </label>
-                    </div> -->
+                    </div>
 
-                    <button
-                        :class="{ 'opacity-70 cursor-not-allowed': form.processing }"
-                        :disabled="form.processing"
-                        class="w-full py-4 bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white font-bold rounded-xl shadow-lg shadow-red-500/30 transform transition-all active:scale-[0.98] focus:ring-4 focus:ring-red-200"
-                    >
-                        <span v-if="form.processing" class="flex items-center justify-center gap-2">
-                             <svg class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                            </svg>
-                            Memproses...
-                        </span>
-                        <span v-else>Masuk Akun</span>
-                    </button>
+                    <div class="pt-2">
+                        <button
+                            :class="{ 'opacity-70 cursor-not-allowed': form.processing }"
+                            :disabled="form.processing"
+                            class="w-full relative py-3.5 bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white font-bold rounded-2xl shadow-xl shadow-red-500/25 transform transition-all duration-200 hover:-translate-y-0.5 active:scale-[0.98] focus:ring-4 focus:ring-red-200 dark:focus:ring-red-900 overflow-hidden group"
+                        >
+                            <div class="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:animate-shimmer"></div>
+                            <span v-if="form.processing" class="flex items-center justify-center gap-2 relative">
+                                <svg class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                </svg>
+                                Memproses...
+                            </span>
+                            <span v-else class="relative flex items-center justify-center gap-2">
+                                Masuk Akun
+                                <svg class="w-5 h-5 transition-transform group-hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+                            </span>
+                        </button>
+                    </div>
 
-                    <div class="mt-8 text-center">
-                        <p class="text-sm text-gray-500 dark:text-gray-400">
+                    <div class="text-center">
+                        <p class="text-sm text-gray-500 dark:text-gray-400 font-medium">
                             Belum punya akun akses?
-                            <Link :href="route('register')" class="text-red-600 font-bold hover:text-red-800 hover:underline transition-all">
+                            <Link :href="route('register')" class="text-red-600 font-bold hover:text-red-700 hover:underline transition-colors ml-1">
                                 Daftar Sekarang
                             </Link>
                         </p>
                     </div>
                 </form>
-            </div>
 
-            <div class="lg:hidden mt-12 text-center text-xs text-gray-400">
-                © Telkom Indonesia
+                <div class="mt-8 pt-6 border-t border-gray-100 dark:border-gray-800/50 text-center">
+                    <p class="text-xs text-gray-400 dark:text-gray-600 font-medium">
+                        &copy; {{ new Date().getFullYear() }} Telkom Indonesia. Protected by Enterprise Security.
+                    </p>
+                </div>
+
             </div>
         </div>
     </div>
 </template>
+
+<style scoped>
+.animate-fade-in-up {
+    animation: fadeInUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    opacity: 0;
+    transform: translateY(20px);
+}
+
+.delay-300 { animation-delay: 0.3s; }
+
+@keyframes fadeInUp {
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes shimmer {
+    100% { transform: translateX(100%); }
+}
+.group-hover\:animate-shimmer {
+    animation: shimmer 1.5s infinite;
+}
+
+.animate-slow-pan {
+    animation: slowPan 30s infinite alternate ease-in-out;
+}
+@keyframes slowPan {
+    from { object-position: 50% 50%; transform: scale(1.05); }
+    to { object-position: 60% 50%; transform: scale(1.15); }
+}
+</style>
