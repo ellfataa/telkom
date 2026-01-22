@@ -127,6 +127,17 @@ const daftarLaporan = computed<Transaksi[]>(() => {
     return Array.from(uniqueMap.values());
 });
 
+// Fungsi menampilkan Total Bulanan
+const totalBulanan = computed(() => {
+    if(!selectedTransaksi.value?.items) return 0;
+
+    return selectedTransaksi.value.items.reduce((acc, item) => {
+        const hargaBulanan = item.jumlah > 0 ? (item.harga_produk * 1) : 0;
+
+        return acc + hargaBulanan;
+    }, 0);
+});
+
 // Fungsi grup transaksi
 const grupTransaksi = computed(() => {
     const grup = rawData.value.reduce((acc: any, item) => {
@@ -344,6 +355,13 @@ onMounted(fetchSemuaTransaksi);
                 <div class="p-6">
                     <div class="mb-4 flex justify-between rounded-lg bg-gray-50 p-4 text-sm">
                         <span>Waktu: {{ formatDate(selectedTransaksi.created_at) }}</span>
+                        <div class="flex-col">
+                            <div>
+                                <span class="font-bold">Total Bulanan: {{
+                                    formatCurrency(totalBulanan)
+                                     }}</span>
+                            </div>
+                        </div>
                         <div class="flex-col">
                             <div>
                                 <span class="font-bold">Total Penawaran: {{

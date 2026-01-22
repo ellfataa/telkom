@@ -7,7 +7,6 @@ use Illuminate\Support\Facades\DB; // Menggunakan Query Builder
 use Illuminate\Validation\ValidationException;
 use Illuminate\Support\Str;
 use Carbon\Carbon;
-use function Laravel\Prompts\alert;
 
 class ProdukController extends Controller
 {
@@ -94,8 +93,8 @@ class ProdukController extends Controller
 
             // 2. Insert menggunakan Raw SQL
             DB::insert("
-            INSERT INTO {$this->tableName} 
-            (id_produk, nama_produk, kategori, bandwidth, harga_produk, status, created_at, updated_at) 
+            INSERT INTO {$this->tableName}
+            (id_produk, nama_produk, kategori, bandwidth, harga_produk, status, created_at, updated_at)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?)
         ", [
                 $newProductId,
@@ -138,8 +137,8 @@ class ProdukController extends Controller
             // 2. EKSTREM: Langsung Update tanpa cek keberadaan data (Single Query)
             // Kita asumsikan semua kolom dikirim (required) agar query bisa statis
             $affected = DB::update("
-            UPDATE {$this->tableName} 
-            SET nama_produk = ?, kategori = ?, bandwidth = ?, harga_produk = ?, status = ?, updated_at = ? 
+            UPDATE {$this->tableName}
+            SET nama_produk = ?, kategori = ?, bandwidth = ?, harga_produk = ?, status = ?, updated_at = ?
             WHERE id_produk = ?
         ", [
                 $validated['nama_produk'],
@@ -210,11 +209,13 @@ class ProdukController extends Controller
                 }
 
                 // 3. Aktifkan kembali Bulk Insert
-
                 DB::table('transaksi_children')->insert($dataChildren);
 
-
-                return response(alert("Laporan Penawaran Berhasil Ditambahkan"));
+                // PERBAIKAN: Menggunakan response JSON standar, bukan alert() CLI
+                return response()->json([
+                    'message' => 'Laporan Penawaran Berhasil Ditambahkan',
+                    'id_transaksi' => $idTransaksi
+                ], 201);
 
             } catch (\Exception $e) {
                 return response()->json([
