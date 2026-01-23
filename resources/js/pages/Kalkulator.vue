@@ -2,7 +2,7 @@
 import Sidebar from '@/components/Sidebar.vue';
 import Button from '@/components/ui/button/Button.vue';
 import axios from 'axios';
-import { FileText, Plus, X, Search, Trash2, ChevronRight, Calculator } from 'lucide-vue-next';
+import { FileText, Plus, X } from 'lucide-vue-next';
 import { computed, onMounted, ref } from 'vue';
 
 // Interface
@@ -59,26 +59,19 @@ const error = ref<string | null>(null);
 // ref dataproduk yang diambil semua
 const daftarProduk = ref<Produk[]>([]);
 
-// ref submit transaksi
+// ref submit laporan
 const isSubmitting = ref(false);
 
 // ref modal nama pelanggan
 const namaPelanggan = ref('');
 const showModalPelanggan = ref(false);
 
-// ref modal success
-const showSuccessModal = ref(false);
-const successMessage = ref('');
-
-
-// Function Kolom
 // Function Kolom Tambah Produk ke Keranjang
-const tambahKeTabel = () => {
+const tambahKeTabel = async () => {
     const produkCocok = daftarProduk.value.find(p =>
         p.nama_produk.toLowerCase() === searchQuery.value.toLowerCase() &&
         p.bandwidth === Number(searchBandWidth.value)
     );
-
 
     // 1. Cek apakah produk valid (harga tidak 0)
     if (!formData.value.id_produk || formData.value.harga_produk === 0 || !produkCocok) {
@@ -87,7 +80,7 @@ const tambahKeTabel = () => {
     }
 
     // 2. Memasukan data ke daftar keranjang
-    daftarKeranjang.value.push({
+    await daftarKeranjang.value.push({
         id_produk: formData.value.id_produk,
         nama_produk: formData.value.nama_produk,
         bandwidth: formData.value.bandwidth,
@@ -104,10 +97,12 @@ const tambahKeTabel = () => {
         diskon_otc_rp: 0,
     });
 
-    successMessage.value = `Produk ${formData.value.nama_produk} (${formData.value.bandwidth}Mbps) berhasil ditambahkan!`;
-    showSuccessModal.value = true;
+    await alert(`Produk  ${formData.value.nama_produk} (${formData.value.bandwidth}Mbps) berhasil ditambahkan!`)
+
     searchQuery.value = '';
     searchBandWidth.value = '';
+    formData.value.kategori = ''
+
     // closeModal();
 };
 
@@ -143,27 +138,14 @@ const getHargaOtc = (kategori: string, kuantitas: number) => {
     else return 500000 * kuantitas;
 };
 
-const getProdukPpn = (item: any) => {
-    const harga_diskon = getDiskonProduk(item.harga_produk, item.kuantitas, item.diskon_produk)
-
-    const hargaPpn = harga_diskon * 0.11
-    return hargaPpn;
-};
-
-const getOtcPpn = (item: any) => {
-    const diskon_otc = getDiskonOtc(item.kategori, item.kuantitas, item.diskon_otc)
-    const hargaPpn = diskon_otc * 0.11
-    return hargaPpn
-};
-
 // diskon produk
 const getDiskonProduk = (harga_produk: number, kuantitas: number, diskon_produk: number) => {
     const h_produk = getHargaProduk(harga_produk, kuantitas)
     const x_diskon = diskon_produk / 100
     const diskon_harga = h_produk * x_diskon
-    const x = h_produk - diskon_harga
+    const h_akhir = h_produk - diskon_harga
 
-    return x
+    return h_akhir;
 }
 
 // diskon otc
@@ -171,22 +153,38 @@ const getDiskonOtc = (kategori: string, kuantitas: number, diskon_otc: number) =
     const x_diskon = diskon_otc / 100
     const h_otc = getHargaOtc(kategori, kuantitas)
     const diskon_harga = h_otc * x_diskon
-    const y = h_otc - diskon_harga
+    const h_akhir = h_otc - diskon_harga
 
-    return y
+    return h_akhir
 }
 
+const getProdukPpn = (item: any) => {
+    const h_produk = getDiskonProduk(item.harga_produk, item.kuantitas, item.diskon_produk)
+    const hargaPpn = h_produk * 0.11
+    return hargaPpn;
+};
+
+const getOtcPpn = (item: any) => {
+    const h_otc = getDiskonOtc(item.kategori, item.kuantitas, item.diskon_otc)
+    const hargaPpn = h_otc * 0.11
+    return hargaPpn
+};
+
+
 const hargaFinalOtc = (item: any) => {
-    // Harga OTC = get diskon otc + get otc ppn
-    const hargaFinalOtc = getDiskonOtc(item.kategori, item.kuantitas, item.diskon_otc) + getOtcPpn(item)
-    return hargaFinalOtc
+    const nominalDiskonOtc = getDiskonOtc(item.kategori, item.kuantitas, item.diskon_otc)
+    const ppnOtc = getOtcPpn(item)
+
+    const x = nominalDiskonOtc + ppnOtc
+    return x
 }
 
 const hargaFinalProduk = (item: any) => {
+    const nominalDiksonProduk = getDiskonProduk(item.harga_produk, item.kuantitas, item.diskon_produk)
+    const ppnProduk = getProdukPpn(item)
 
-    // Harga final = get diskon produk + get produk ppn
-    const harga_final = getDiskonProduk(item.harga_produk, item.kuantitas, item.diskon_produk) + getProdukPpn(item)
-    return harga_final
+    const x = nominalDiksonProduk + ppnProduk
+    return x
 }
 
 
@@ -215,12 +213,37 @@ const totalKeseluruhan = computed(() => {
     return x
 })
 
+
+// Function Diskon Otc
+const netDiskonTotal = computed(() => {
+    if (daftarKeranjang.value.length === 0) return 0;
+
+    // Ambil nilai total yang sudah dikali ppn dan diskon
+    const totalKeseluruhanFinal = totalKeseluruhan.value
+
+    // Hitung harga awal sebelum diskon dan ppn
+    const totalHargaAwal = daftarKeranjang.value.reduce((total, item) => {
+        const hargaProdukDasar = getHargaProduk(item.harga_produk, item.kuantitas) * item.bulan;
+        const hargaOtcDasar = getHargaOtc(item.kategori, item.kuantitas)
+        return total + hargaProdukDasar + hargaOtcDasar;
+    }, 0)
+
+    if (totalHargaAwal === 0) return 0;
+
+    const totalHargaAwalDenganPajak = totalHargaAwal * 1.11;
+    // Rumus
+    const hasil = 1 - (totalKeseluruhanFinal / totalHargaAwalDenganPajak);
+
+    const persentase = hasil * 100;
+
+    // Gunakan parseFloat + toFixed agar hasilnya tetap angka (bukan string) tapi rapi
+    return parseFloat(persentase.toFixed(2));
+})
+
 // Hapus dari keranjang
 const hapusItem = (id_produk: string) => {
     if (confirm('Apakah Anda yakin ingin menghapus produk ini dari keranjang?')) {
         daftarKeranjang.value = daftarKeranjang.value.filter(item => item.id_produk !== id_produk);
-        successMessage.value = 'Produk berhasil dihapus dari keranjang!';
-        showSuccessModal.value = true;
     }
 };
 
@@ -303,7 +326,7 @@ const fetchProducts = async () => {
     }
 };
 
-// function  tambah transaksi
+// function  tambah laporan
 const tambahLaporanPenawaran = async () => {
 
     if (daftarKeranjang.value.length === 0) {
@@ -319,7 +342,7 @@ const tambahLaporanPenawaran = async () => {
     const payload = {
         netDiskon: netDiskonTotal.value,
         nama_pelanggan: namaPelanggan.value,
-        total_harga: totalKeseluruhan.value * 1.11, // Mengambil dari Computed
+        total_harga: totalKeseluruhan.value, // Mengambil dari Computed
         items: daftarKeranjang.value.map(item => ({
             id_produk: item.id_produk,
             nama_produk: item.nama_produk,
@@ -341,7 +364,7 @@ const tambahLaporanPenawaran = async () => {
     };
 
     try {
-        const response = await axios.post('/api/transaksi', payload);
+        const response = await axios.post('/api/laporan', payload);
         alert(response.data.message);
 
         // Reset keranjang setelah sukses
@@ -356,57 +379,33 @@ const tambahLaporanPenawaran = async () => {
     }
 };
 
-const netDiskonTotal = computed(() => {
-    if (daftarKeranjang.value.length === 0) return 0;
-
-    // Ambil nilai total yang sudah dikali ppn dan diskon
-    const totalKeseluruhanFinal = totalKeseluruhan.value
-
-    // Hitung harga awal sebelum diskon dan ppn
-    const totalHargaAwal = daftarKeranjang.value.reduce((total, item) => {
-        const hargaProdukDasar = getHargaProduk(item.harga_produk, item.kuantitas) * item.bulan;
-        const hargaOtcDasar = getHargaOtc(item.kategori, item.kuantitas)
-        return total + hargaProdukDasar + hargaOtcDasar;
-    }, 0)
-
-    if (totalHargaAwal === 0) return 0;
-
-    const totalHargaAwalDenganPajak = totalHargaAwal * 1.11;
-    // Rumus
-    const hasil = 1 - (totalKeseluruhanFinal / totalHargaAwalDenganPajak);
-
-    const persentase = hasil * 100;
-
-    // Gunakan parseFloat + toFixed agar hasilnya tetap angka (bukan string) tapi rapi
-    return parseFloat(persentase.toFixed(2));
-})
-
 // Function rule input angka
+const ruleInputAngkaArray = (event: any) => {
+    let val = event.target.value.replace(/\D/g, '')
+    event.target.value = val
+
+}
+
 const ruleInputAngka = (event: any) => {
     let val = event.target.value.replace(/\D/g, '')
     event.target.value = val
     searchBandWidth.value = val
 }
 
-// Function to close dropdown with delay
-const closeDropdownWithDelay = () => {
-    setTimeout(() => {
-        showDropdown.value = false;
-    }, 200);
-}
-
 // Function Diskon Produk
 const ruleDiskonProduk = (item: any, event: any) => {
-    // 1. Ambil apa yang diketik user di layar, langsung bersihkan hurufnya
-    let val = event.target.value.replace(/[^-0-9]/g, '');
+    // 1. Ambil apa yang diketik user, izinkan angka, titik (desimal), dan minus
+    let val = event.target.value.replace(/[^-0-9.]/g, '');
+
+    // Pastikan hanya ada satu titik desimal
+    const parts = val.split('.');
+    if (parts.length > 2) {
+        val = parts[0] + '.' + parts.slice(1).join('');
+    }
 
     // Pastikan tanda minus hanya bisa ada di karakter pertama
     if (val.includes('-')) {
-        // Ambil karakter pertama, lalu bersihkan sisa string dari tanda minus lainnya
         val = val.charAt(0) + val.substring(1).replace(/-/g, '');
-
-        // Opsional: Jika Anda ingin memastikan "-" hanya bisa di depan,
-        // tapi user tidak sengaja mengetik "5-", pastikan "-" tetap di indeks 0
         if (val.indexOf('-') !== 0) {
             val = val.replace(/-/g, '');
         }
@@ -414,10 +413,8 @@ const ruleDiskonProduk = (item: any, event: any) => {
 
     // 2. Jalankan logika kategori
     if (item.kategori !== 'astinet') {
-
         val = '0';
     } else if (Number(val) > 30) {
-
         val = '30';
     }
 
@@ -425,21 +422,34 @@ const ruleDiskonProduk = (item: any, event: any) => {
     event.target.value = val;
 
     // 4. Update data internal Vue agar sinkron dengan kalkulasi harga
-    // Jika input hanya berisi "-", anggap sebagai 0 dulu sampai user mengetik angka
     item.diskon_produk = (val === '-' || val === '') ? 0 : Number(val);
-    // item.diskon_produk = Number(val);
 }
 
 // Function Diskon OTC
 const ruleDiskonOtc = (item: any, event: any) => {
-    let val = event.target.value.replace(/\D/g, '')
+    // Izinkan angka, titik (desimal), dan minus
+    let val = event.target.value.replace(/[^-0-9.]/g, '');
+
+    // Pastikan hanya ada satu titik desimal
+    const parts = val.split('.');
+    if (parts.length > 2) {
+        val = parts[0] + '.' + parts.slice(1).join('');
+    }
+
+    // Pastikan tanda minus hanya bisa ada di karakter pertama
+    if (val.includes('-')) {
+        val = val.charAt(0) + val.substring(1).replace(/-/g, '');
+        if (val.indexOf('-') !== 0) {
+            val = val.replace(/-/g, '');
+        }
+    }
 
     if (Number(val) > 40) {
-        val = '40'
+        val = '40';
     }
 
     event.target.value = val;
-    item.diskon_otc = val == '' ? 0 : Number(val)
+    item.diskon_otc = val == '' ? 0 : Number(val);
 }
 
 onMounted(() => {
@@ -457,366 +467,319 @@ const formatCurrency = (value: number) => {
 </script>
 
 <template>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-
     <Sidebar>
-        <div class="space-y-8 font-['Plus_Jakarta_Sans',sans-serif]">
-
-            <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div class="space-y-6">
+            <div class="flex items-center justify-between">
                 <div>
-                    <h2 class="text-2xl font-bold text-gray-900 tracking-tight flex items-center gap-2">
-                        <Calculator class="w-6 h-6 text-blue-600" />
-                        Kalkulator Penawaran
-                    </h2>
-                    <p class="mt-1 text-sm text-gray-500">Hitung estimasi biaya dan buat penawaran dengan mudah.</p>
+                    <h2 class="text-2xl font-bold">Kalkulator Penawaran</h2>
+                    <!-- <p class="mt-1 text-sm text-muted-foreground">Kelola semua produk Anda di sini</p> -->
                 </div>
                 <button @click="openAddModal"
-                    class="group flex items-center gap-2 rounded-xl bg-blue-600 px-5 py-2.5 text-white shadow-lg shadow-blue-500/30 transition-all hover:bg-blue-700 hover:shadow-blue-600/40 active:scale-[0.98]">
-                    <Plus class="h-5 w-5 transition-transform group-hover:rotate-90" />
-                    <span class="font-bold text-sm">Tambah Produk</span>
+                    class="flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-white transition-colors hover:bg-blue-700">
+                    <Plus class="h-4 w-4" />
+                    <span class="font-medium">Tambah Produk</span>
                 </button>
             </div>
 
-            <div class="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
-                <div class="overflow-x-auto custom-scrollbar">
+            <!-- Table -->
+            <div class="overflow-hidden rounded-lg border bg-card">
+                <div class="overflow-x-auto">
                     <table class="w-full">
-                        <thead class="border-b border-gray-100 bg-gray-50/50">
+                        <thead class="border-b bg-muted/50">
                             <tr class="text-center">
-                                <th class="px-6 py-4 text-xs font-bold tracking-wider text-gray-500 uppercase">No</th>
-                                <th class="px-6 py-4 text-xs font-bold tracking-wider text-gray-500 uppercase text-left">Produk</th>
-                                <th class="px-6 py-4 text-xs font-bold tracking-wider text-gray-500 uppercase">Jumlah</th>
-                                <th class="px-6 py-4 text-xs font-bold tracking-wider text-gray-500 uppercase">Durasi</th>
-                                <th class="px-6 py-4 text-xs font-bold tracking-wider text-gray-500 uppercase text-right">Harga</th>
-                                <th class="px-6 py-4 text-xs font-bold tracking-wider text-gray-500 uppercase text-right">OTC</th>
-                                <th class="px-6 py-4 text-xs font-bold tracking-wider text-gray-500 uppercase">Disc Produk</th>
-                                <th class="px-6 py-4 text-xs font-bold tracking-wider text-gray-500 uppercase">Disc OTC</th>
-                                <th class="px-6 py-4 text-xs font-bold tracking-wider text-gray-500 uppercase text-right">Potongan Produk</th>
-                                <th class="px-6 py-4 text-xs font-bold tracking-wider text-gray-500 uppercase text-right">Potongan OTC</th>
-                                <th class="px-6 py-4 text-xs font-bold tracking-wider text-gray-500 uppercase text-right">PPN (11%)</th>
-                                <th class="px-6 py-4 text-xs font-bold tracking-wider text-gray-500 uppercase text-right">Produk Final</th>
-                                <th class="px-6 py-4 text-xs font-bold tracking-wider text-gray-500 uppercase text-right">OTC Final</th>
-                                <th class="px-6 py-4 text-xs font-bold tracking-wider text-gray-500 uppercase text-right bg-blue-50/30">Subtotal</th>
-                                <th class="px-6 py-4 text-xs font-bold tracking-wider text-gray-500 uppercase">Aksi</th>
+                                <th
+                                    class="px-6 py-3 text-xs font-medium tracking-wider text-muted-foreground uppercase">
+                                    No</th>
+                                <th
+                                    class="px-6 py-3 text-xs font-medium tracking-wider text-muted-foreground uppercase">
+                                    Produk</th>
+                                <th
+                                    class="px-6 py-3 text-xs font-medium tracking-wider text-muted-foreground uppercase">
+                                    Jumlah</th>
+                                <th
+                                    class="px-6 py-3 text-xs font-medium tracking-wider text-muted-foreground uppercase">
+                                    Durasi</th>
+                                <th
+                                    class="px-6 py-3 text-xs font-medium tracking-wider text-muted-foreground uppercase">
+                                    Harga</th>
+                                <th
+                                    class="px-6 py-3 text-xs font-medium tracking-wider text-muted-foreground uppercase">
+                                    OTC</th>
+                                <th
+                                    class="px-6 py-3 text-xs font-medium tracking-wider text-muted-foreground uppercase">
+                                    Diskon Produk</th>
+                                <th
+                                    class="px-6 py-3 text-xs font-medium tracking-wider text-muted-foreground uppercase">
+                                    Diskon OTC</th>
+                                <th
+                                    class="px-6 py-3 text-xs font-medium tracking-wider text-muted-foreground uppercase">
+                                    Nominal Diskon Produk</th>
+                                <th
+                                    class="px-6 py-3 text-xs font-medium tracking-wider text-muted-foreground uppercase">
+                                    Nominal Diskon OTC
+                                </th>
+                                <th
+                                    class="px-6 py-3 text-xs font-medium tracking-wider text-muted-foreground uppercase">
+                                    PPN
+                                </th>
+                                <th
+                                    class="px-6 py-3 text-xs font-medium tracking-wider text-muted-foreground uppercase">
+                                    Produk Final
+                                </th>
+                                <th
+                                    class="px-6 py-3 text-xs font-medium tracking-wider text-muted-foreground uppercase">
+                                    OTC Final
+                                </th>
+                                <th
+                                    class="px-6 py-3 text-xs font-medium tracking-wider text-muted-foreground uppercase">
+                                    Subtotal
+                                </th>
+                                <th
+                                    class="px-6 py-3 text-xs font-medium tracking-wider text-muted-foreground uppercase">
+                                    Aksi
+                                </th>
                             </tr>
                         </thead>
 
-                        <tbody class="divide-y divide-gray-100">
-                            <tr v-for="(item, index) in daftarKeranjang" :key="item.id_produk" class="hover:bg-gray-50/50 transition-colors group">
-                                <td class="px-6 py-4 text-sm font-medium text-center text-gray-500">{{ index + 1 }}</td>
-                                <td class="px-6 py-4 text-sm font-semibold text-gray-900 whitespace-nowrap">
-                                    {{ item.nama_produk }}
-                                    <span class="ml-2 inline-flex items-center rounded-md bg-blue-50 px-2 py-1 text-xs font-medium text-blue-700 ring-1 ring-inset ring-blue-700/10">{{ item.bandwidth }} Mbps</span>
-                                </td>
+                        <tbody>
+                            <tr v-for="(item, index) in daftarKeranjang" :key="item.id_produk">
+                                <td class="px-6 py-4 text-sm font-medium whitespace-nowrap">{{ index + 1 }}</td>
+                                <td class="px-6 py-4 text-sm font-medium whitespace-nowrap">{{ item.nama_produk }}
+                                    ({{ item.bandwidth }}Mbps)</td>
+                                <td class="px-6 py-4 text-sm font-medium whitespace-nowrap">
+                                    <div class="flex items-center justify-center space-x-2 p-4">
+                                        <Button type="button" @click="item.kuantitas > 1 ? item.kuantitas-- : null"
+                                            class="flex h-6 w-6 items-center rounded border bg-transparent text-black hover:bg-gray-300">-</Button>
 
-                                <td class="px-6 py-4">
-                                    <div class="flex items-center justify-center gap-1">
-                                        <button type="button" @click="item.kuantitas > 1 ? item.kuantitas-- : null"
-                                            class="flex h-7 w-7 items-center justify-center rounded-lg border border-gray-200 bg-white text-gray-600 hover:bg-gray-100 hover:text-blue-600 transition-colors">
-                                            -
-                                        </button>
                                         <input type="text" v-model.number="item.kuantitas" inputmode="numeric"
-                                            @input="ruleInputAngka($event)"
+                                            @input="ruleInputAngkaArray($event)"
                                             @blur="!item.kuantitas || item.kuantitas < 1 ? item.kuantitas = 1 : null"
-                                            class="w-12 rounded-lg border-gray-200 bg-gray-50 py-1 text-center text-sm font-medium focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-200 outline-none transition-all" />
-                                        <button type="button" @click="item.kuantitas++"
-                                            class="flex h-7 w-7 items-center justify-center rounded-lg border border-gray-200 bg-white text-gray-600 hover:bg-gray-100 hover:text-blue-600 transition-colors">
-                                            +
-                                        </button>
+                                            class="w-full max-w-[6rem] min-w-[3rem] rounded border px-1 text-center" />
+
+                                        <Button type="button" @click="item.kuantitas++"
+                                            class="flex h-6 w-6 items-center justify-center rounded border bg-transparent text-black hover:bg-gray-300">+</Button>
                                     </div>
                                 </td>
-
                                 <td class="px-6 py-4">
-                                    <div class="flex items-center justify-center gap-2">
+                                    <div class="flex items-center justify-center space-x-1">
                                         <input type="text" inputmode="numeric" v-model.number="item.bulan"
-                                            @input="ruleInputAngka($event)"
+                                            @input="ruleInputAngkaArray($event)"
                                             @blur="!item.bulan || item.bulan < 1 ? item.bulan = 1 : null"
-                                            class="w-12 rounded-lg border-gray-200 bg-gray-50 py-1 text-center text-sm font-medium focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-200 outline-none transition-all" />
-                                        <span class="text-xs text-gray-500 font-medium">Bulan</span>
+                                            class="w-8 rounded border px-1 text-center" />
+                                        <p>Bulan</p>
                                     </div>
                                 </td>
-
-                                <td class="px-6 py-4 text-sm whitespace-nowrap text-right font-medium text-gray-600">
-                                    {{ formatCurrency(getHargaProduk(item.kuantitas, item.harga_produk)) }}
-                                </td>
-                                <td class="px-6 py-4 text-sm whitespace-nowrap text-right font-medium text-gray-600">
+                                <td class="px-6 py-4 text-sm font-medium whitespace-nowrap">
+                                    {{ formatCurrency(getHargaProduk(item.kuantitas, item.harga_produk)) }}</td>
+                                <td class="px-6 py-4 text-sm whitespace-nowrap">
                                     {{ formatCurrency(getHargaOtc(item.kategori, item.kuantitas)) }}
                                 </td>
+                                <td class="px-6 py-4 text-sm whitespace-nowrap">
+                                    <input type="text" inputmode="numeric" v-model.number="item.diskon_produk"
+                                        @input="ruleDiskonProduk(item, $event)"
+                                        class="w-full  rounded border px-1 text-center">
+                                    %
+                                    </input>
+                                </td>
+                                <td class="px-6 py-4 text-sm whitespace-nowrap">
+                                    <input type="text" inputmode="numeric" v-model.number="item.diskon_otc"
+                                        @input="ruleDiskonOtc(item, $event)"
+                                        class="w-full  rounded border px-1 text-center" />
+                                    %
+                                </td>
+                                <td class="px-6 py-4 text-sm whitespace-nowrap">
+                                    {{ formatCurrency(getDiskonProduk(item.harga_produk, item.kuantitas
+                                        , item.diskon_produk)) }}
+                                </td>
 
-                                <td class="px-6 py-4">
-                                    <div class="relative flex items-center justify-center">
-                                        <input type="text" inputmode="numeric" v-model.number="item.diskon_produk"
-                                            @input="ruleDiskonProduk(item, $event)"
-                                            class="w-16 rounded-lg border-gray-200 bg-white py-1 pr-6 text-center text-sm font-medium focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all" />
-                                        <span class="absolute right-3 pointer-events-none text-gray-400 text-xs">%</span>
-                                    </div>
-                                </td>
-                                <td class="px-6 py-4">
-                                    <div class="relative flex items-center justify-center">
-                                        <input type="text" inputmode="numeric" v-model.number="item.diskon_otc"
-                                            @input="ruleDiskonOtc(item, $event)"
-                                            class="w-16 rounded-lg border-gray-200 bg-white py-1 pr-6 text-center text-sm font-medium focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all" />
-                                        <span class="absolute right-3 pointer-events-none text-gray-400 text-xs">%</span>
-                                    </div>
-                                </td>
-
-                                <td class="px-6 py-4 text-sm whitespace-nowrap text-right text-red-500">
-                                    {{ formatCurrency(getDiskonProduk(item.harga_produk, item.kuantitas, item.diskon_produk)) }}
-                                </td>
-                                <td class="px-6 py-4 text-sm whitespace-nowrap text-right text-red-500">
+                                <td class="px-6 py-4 text-sm whitespace-nowrap">
                                     {{ formatCurrency(getDiskonOtc(item.kategori, item.kuantitas, item.diskon_otc)) }}
                                 </td>
+                                <td class="px-6 py-4 text-sm whitespace-nowrap">
+                                    <div class="flex justify-between space-x-2">
+                                        <p>Produk:</p>
+                                        <p>{{ formatCurrency(getProdukPpn(item)) }}
+                                        </p>
+                                    </div>
 
-                                <td class="px-6 py-4 text-sm whitespace-nowrap text-right text-gray-500">
-                                    <div class="flex flex-col gap-1">
-                                        <div class="flex justify-between gap-2">
-                                            <span class="text-[10px] uppercase">Prod</span>
-                                            <span>{{ formatCurrency(getProdukPpn(item)) }}</span>
-                                        </div>
-                                        <div class="flex justify-between gap-2">
-                                            <span class="text-[10px] uppercase">OTC</span>
-                                            <span>{{ formatCurrency(getOtcPpn(item)) }}</span>
-                                        </div>
+                                    <div class="flex justify-between">
+                                        <p>OTC:</p>
+                                        <p>{{ formatCurrency(getOtcPpn(item)) }}</p>
                                     </div>
                                 </td>
-
-                                <td class="px-6 py-4 text-sm whitespace-nowrap text-right font-medium text-gray-900">
+                                <td class="px-6 py-4 text-sm whitespace-nowrap">
                                     {{ formatCurrency(hargaFinalProduk(item)) }}
                                 </td>
-                                <td class="px-6 py-4 text-sm whitespace-nowrap text-right font-medium text-gray-900">
+                                <td class="px-6 py-4 text-sm whitespace-nowrap">
                                     {{ formatCurrency(hargaFinalOtc(item)) }}
                                 </td>
-                                <td class="px-6 py-4 text-sm whitespace-nowrap text-right font-bold text-blue-700 bg-blue-50/30">
+                                <td class="px-6 py-4 text-sm font-bold whitespace-nowrap text-blue-600">
                                     {{ formatCurrency(hitungSubtotal(item)) }}
                                 </td>
                                 <td class="px-6 py-4 text-center">
                                     <button @click="hapusItem(item.id_produk)"
-                                        class="rounded-lg p-2 text-gray-400 transition-all hover:bg-red-50 hover:text-red-600 hover:shadow-sm"
+                                        class="rounded-lg p-2 text-red-600 transition-colors hover:bg-red-50 hover:text-red-700"
                                         title="Hapus Produk">
-                                        <Trash2 class="h-5 w-5" />
+                                        <X class="h-5 w-5" />
                                     </button>
                                 </td>
                             </tr>
 
-                            <tr v-if="daftarKeranjang.length === 0">
-                                <td colspan="15" class="px-6 py-16 text-center">
-                                    <div class="flex flex-col items-center justify-center text-gray-400">
-                                        <div class="rounded-full bg-gray-50 p-4 mb-3">
-                                            <Calculator class="h-8 w-8 text-gray-300" />
-                                        </div>
-                                        <p class="font-medium text-gray-500">Keranjang Penawaran Kosong</p>
-                                        <p class="text-sm mt-1">Silakan tambah produk untuk memulai perhitungan.</p>
-                                    </div>
+                            <tr v-if="daftarKeranjang.length > 0" class="bg-blue-50/50 font-bold">
+                                <td colspan="6" class="px-6 py-4 text-right text-sm tracking-wider uppercase"></td>
+                                <td colspan="2" class="px-6 py-4 text-right text-sm tracking-wider uppercase">Diskon
+                                    Agregat: {{ netDiskonTotal }}%
+                                </td>
+                                <td colspan="5" class="px-6 py-4 text-right text-sm tracking-wider uppercase">Total
+                                    Keseluruhan (Grand Total) :</td>
+                                <td class="px-6 py-4 text-start whitespace-nowrap text-blue-700">
+                                    <p>Tanpa PPN:
+                                         {{ formatCurrency(totalKeseluruhan * 0.89) }}
+                                    </p>
+                                    <p>
+                                        Termasuk PPN:
+                                         {{ formatCurrency(totalKeseluruhan) }}
+
+                                    </p>
+                                </td>
+                                <td class="px-6 py-4 text-center whitespace-nowrap text-blue-700">
                                 </td>
                             </tr>
-
-                            <tr v-if="daftarKeranjang.length > 0" class="bg-gray-50/80 font-bold border-t-2 border-gray-100">
-                                <td colspan="9"></td>
-                                <td colspan="3" class="px-6 py-6 text-right">
-                                    <div class="flex flex-col gap-1 items-end">
-                                        <span class="text-l text-green-600 uppercase tracking-wider">Diskon Agregat</span>
-                                        <span class="text-green-600 text-xl">{{ netDiskonTotal }}%</span>
-                                    </div>
-                                </td>
-                                <td colspan="3" class="px-6 py-8">
-                                    <div class="flex flex-col gap-4 rounded-xl bg-white border border-gray-200 p-6 shadow-sm">
-                                        <div class="flex justify-between items-center gap-8 text-base font-medium text-gray-600">
-                                            <span>Total (Excl. PPN)</span>
-                                            <span>{{ formatCurrency(totalKeseluruhan) }}</span>
-                                        </div>
-                                        <div class="h-px bg-gray-100 w-full"></div>
-                                        <div class="flex justify-between items-center gap-8 text-l font-bold text-blue-700">
-                                            <span>Grand Total</span>
-                                            <span>{{ formatCurrency(totalKeseluruhan * 1.11) }}</span>
-                                        </div>
-                                    </div>
-                                </td>
+                            <tr v-else>
+                                <td colspan="10" class="px-6 py-10 text-center text-muted-foreground">Belum ada produk
+                                    yang ditambahkan.</td>
                             </tr>
                         </tbody>
                     </table>
                 </div>
             </div>
 
-            <div class="flex items-center justify-end pt-4" v-if="daftarKeranjang.length > 0">
+            <div class="flex items-center justify-between">
                 <button @click="showModalPelanggan = true"
-                    class="group flex items-center gap-3 rounded-xl bg-green-500 px-8 py-4 text-white shadow-xl shadow-gray-200 transition-all hover:bg-gray-800 hover:-translate-y-1 active:scale-[0.98]">
-                    <FileText class="h-5 w-5 group-hover:text-white transition-colors" />
-                    <div class="text-left">
-                        <p class="text-[10px] font-medium uppercase tracking-wider">Langkah Terakhir</p>
-                        <p class="font-bold text-base leading-none">Simpan Laporan Penawaran</p>
-                    </div>
-                    <ChevronRight class="h-5 w-5 ml-2 text-gray-500 group-hover:text-white transition-colors" />
+                    class="flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-white transition-colors hover:bg-blue-700">
+                    <FileText class="h-4 w-4" />
+                    <span class="font-medium">Simpan Laporan Penawaran</span>
                 </button>
             </div>
 
             <div v-if="showModalPelanggan"
-                class="fixed inset-0 z-[60] flex items-center justify-center transition-all">
-                <div class="w-full max-w-md rounded-3xl bg-white p-8 shadow-2xl scale-100 transition-all">
-                    <div class="text-center mb-6">
-                        <h3 class="text-xl font-bold text-gray-900">Konfirmasi Transaksi</h3>
-                        <p class="text-sm text-gray-500 mt-1">Masukkan identitas pelanggan untuk menyimpan laporan.</p>
-                    </div>
+                class="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 p-4">
+                <div class="w-full max-w-sm rounded-lg bg-white p-6 shadow-xl">
+                    <h3 class="mb-4 text-lg font-bold">Konfirmasi Laporan Penawaran</h3>
+                    <label class="mb-2 block text-sm font-medium">Nama Pelanggan :</label>
+                    <input v-model="namaPelanggan" type="text"
+                        class="w-full rounded-lg border p-2 outline-none focus:ring-2 focus:ring-blue-500"
+                        placeholder="Masukkan nama pelanggan..." />
 
-                    <div class="space-y-4">
-                        <div>
-                            <label class="mb-2 block text-xs font-bold uppercase tracking-wider text-gray-500 ml-1">Nama Pelanggan</label>
-                            <input v-model="namaPelanggan" type="text"
-                                class="w-full rounded-xl border border-gray-200 bg-gray-50 p-3.5 text-gray-900 outline-none focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all placeholder:text-gray-400"
-                                placeholder="Contoh: Pemkab Banyumas" />
-                        </div>
-                    </div>
-
-                    <div class="mt-8 flex gap-3">
+                    <div class="mt-6 flex gap-3">
                         <button @click="showModalPelanggan = false"
-                            class="flex-1 rounded-xl border border-gray-200 bg-white py-3 text-sm font-bold text-gray-700 hover:bg-gray-50 hover:text-gray-900 transition-colors">
-                            Batal
-                        </button>
+                            class="flex-1 rounded-lg border py-2 hover:bg-gray-50">Batal</button>
                         <button @click="tambahLaporanPenawaran"
-                            class="flex-1 rounded-xl bg-blue-600 py-3 text-sm font-bold text-white shadow-lg shadow-blue-500/30 hover:bg-blue-700 hover:shadow-blue-600/40 transition-all">
-                            Simpan Data
-                        </button>
+                            class="flex-1 rounded-lg bg-blue-600 py-2 text-white hover:bg-blue-700">Simpan</button>
                     </div>
                 </div>
             </div>
+
 
         </div>
     </Sidebar>
 
+
     <div v-if="showModal"
-        class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4 transition-opacity"
+        class="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-black/50 p-2 sm:p-4"
         @click.self="closeModal">
-        <div class="flex max-h-[90vh] w-full max-w-lg flex-col rounded-3xl bg-white shadow-2xl overflow-hidden">
-            <div class="flex shrink-0 items-center justify-between border-b border-gray-100 p-6 bg-white">
-                <div>
-                    <h3 class="text-lg font-bold text-gray-900">Tambah Produk</h3>
-                    <p class="text-xs text-gray-500 mt-0.5">Cari dan masukkan produk ke keranjang</p>
-                </div>
-                <button @click="closeModal" class="rounded-full p-2 text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-colors">
-                    <X class="h-5 w-5" />
+        <div class="my-auto flex max-h-[95vh] w-full max-w-[95vw] flex-col rounded-lg bg-white shadow-xl sm:max-w-md">
+            <div class="flex shrink-0 items-center justify-between border-b p-4 sm:p-6">
+                <h3 class="text-base font-semibold sm:text-lg">Tambah Produk Ke Keranjang</h3>
+                <button @click="closeModal" class="rounded-lg p-1 transition-colors hover:bg-muted">
+                    <X class="h-4 w-4 sm:h-5 sm:w-5" />
                 </button>
             </div>
 
-            <div class="flex-1 space-y-5 overflow-y-auto p-6 bg-gray-50/30">
-
-                <div class="grid grid-cols-12 gap-4">
-                    <div class="col-span-7 relative">
-                        <label class="mb-2 block text-xs font-bold uppercase tracking-wider text-gray-500">Nama Produk</label>
-                        <div class="relative">
-                            <Search class="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-                            <input v-model="searchQuery" type="text" @focus="showDropdown = true" @blur="closeDropdownWithDelay()"
-                                class="w-full rounded-xl border border-gray-200 py-2.5 pl-10 pr-4 text-sm outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all"
-                                placeholder="Ketik nama produk..." />
+            <div class="flex-1 space-y-3 overflow-y-auto p-4 sm:space-y-4 sm:p-6">
+                <div>
+                    <div class="flex space-x-2">
+                        <div class="w-[50%]">
+                            <label class=" mb-1.5 block text-xs font-medium sm:mb-2 sm:text-sm">Nama Produk:</label>
+                            <input v-model="searchQuery" type="text" @focus="showDropdown = true"
+                                @blur="showDropdown = false"
+                                class="w-full rounded-lg border px-2.5 py-1.5 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none sm:px-3 sm:py-2 sm:text-base"
+                                placeholder="Cari Produk" />
                         </div>
+                        <div class="w-[70%]">
+                            <label class="mb-1.5 block text-xs font-medium sm:mb-2 sm:text-sm">Bandwidth:</label>
+                            <div class="flex">
+                                <input @input="ruleInputAngka($event); updateDataByBandwidth()"
+                                    v-model.number="searchBandWidth" type="text" @focus="showDropdown = true"
+                                    @blur="showDropdown = false"
+                                    class="w-full rounded-lg border px-2.5 py-1.5 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none sm:px-3 sm:py-2 sm:text-base"
+                                    placeholder="Cari Bandwidth" />
+                                <span
+                                    class="inline-flex items-center rounded-lg border border-l-0 bg-gray-100 px-3 text-gray-500 ml-3">
+                                    Mbps
+                                </span>
+                            </div>
 
-                        <div v-if="showDropdown" class="absolute left-0 right-0 top-full mt-2 max-h-60 overflow-y-auto rounded-xl border border-gray-100 bg-white shadow-xl z-20 custom-scrollbar">
-                            <div v-if="filteredProduk.length === 0" class="p-4 text-center text-sm text-gray-400">
-                                Produk tidak ditemukan
-                            </div>
-                            <div v-else @mousedown.prevent="selectProduk(item)" v-for="item in filteredProduk" :key="item.id_produk"
-                                class="cursor-pointer border-b border-gray-50 p-3 hover:bg-blue-50 transition-colors last:border-0 group">
-                                <div class="font-bold text-sm text-gray-800 group-hover:text-blue-700">{{ item.nama_produk }}</div>
-                                <div class="flex items-center gap-2 mt-1">
-                                    <span class="inline-flex items-center rounded-md bg-gray-100 px-1.5 py-0.5 text-[10px] font-medium text-gray-600 uppercase">{{ item.kategori }}</span>
-                                    <span class="text-xs text-gray-500">{{ item.bandwidth }} Mbps</span>
-                                    <span class="text-xs font-medium text-blue-600 ml-auto">{{ formatCurrency(item.harga_produk) }}</span>
-                                </div>
-                            </div>
                         </div>
                     </div>
 
-                    <div class="col-span-5">
-                        <label class="mb-2 block text-xs font-bold uppercase tracking-wider text-gray-500">Bandwidth</label>
-                        <div class="relative">
-                            <input @input="ruleInputAngka($event); updateDataByBandwidth()"
-                                v-model.number="searchBandWidth" type="text"
-                                class="w-full rounded-xl border border-gray-200 py-2.5 pl-4 pr-12 text-sm outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all"
-                                placeholder="Cari..." />
-                            <span class="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-bold text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded-md">Mbps</span>
+                    <div v-if="showDropdown" class="mt-1 max-h-60 overflow-y-auto rounded border bg-white shadow-md">
+                        <div @mousedown.prevent="selectProduk(item)" v-for="item in filteredProduk"
+                            :key="item.id_produk"
+                            class="cursor-pointer border-b p-3 transition-colors hover:bg-blue-50">
+                            <div class="text-sm font-medium">{{ item.nama_produk }}</div>
+                            <div class="text-xs text-gray-500">{{ item.kategori.toUpperCase() }} - {{
+                                formatCurrency(item.harga_produk) }}</div>
+                            <div class="text-xs text-gray-500">Bandwidth: {{ item.bandwidth }}Mbps</div>
                         </div>
+                        <div v-if="filteredProduk.length === 0" class="p-3 text-center text-sm text-gray-400">Produk
+                            tidak ditemukan</div>
                     </div>
                 </div>
-
-                <div class="grid grid-cols-2 gap-4">
-                    <div>
-                        <label class="mb-2 block text-xs font-bold uppercase tracking-wider text-gray-500">Kategori</label>
-                        <input disabled v-model="formData.kategori" type="text"
-                            class="w-full rounded-xl border border-gray-200 bg-gray-100 py-2.5 px-4 text-sm text-gray-500 cursor-not-allowed"
-                            placeholder="-" />
-                    </div>
-                    <div>
-                        <label class="mb-2 block text-xs font-bold uppercase tracking-wider text-gray-500">Harga Satuan</label>
-                        <input disabled :value="formatCurrency(formData.harga_produk)" type="text"
-                            class="w-full rounded-xl border border-gray-200 bg-gray-100 py-2.5 px-4 text-sm text-gray-500 cursor-not-allowed font-medium" />
-                    </div>
+                <div>
+                    <label class="mb-1.5 block text-xs font-medium sm:mb-2 sm:text-sm">Kategori</label>
+                    <input disabled v-model="formData.kategori" type="text"
+                        class="w-full rounded-lg border px-2.5 py-1.5 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none sm:px-3 sm:py-2 sm:text-base"
+                        placeholder="Kategori" />
                 </div>
+                <div>
+                    <label class="mb-1.5 block text-xs font-medium sm:mb-2 sm:text-sm">Harga</label>
+                    <input disabled :value="formatCurrency(formData.harga_produk)" type="text"
+                        class="w-full rounded-lg border bg-gray-50 px-2.5 py-1.5 text-sm focus:outline-none sm:px-3 sm:py-2 sm:text-base" />
+                </div>
+
+
             </div>
 
-            <div class="flex shrink-0 items-center gap-3 border-t border-gray-100 p-6 bg-white">
+            <div class="flex shrink-0 items-center gap-2 border-t p-4 sm:gap-3 sm:p-6">
                 <button @click="closeModal"
-                    class="flex-1 rounded-xl border border-gray-200 py-2.5 text-sm font-bold text-gray-700 hover:bg-gray-50 transition-colors">
+                    class="flex-1 rounded-lg border px-3 py-1.5 text-sm transition-colors hover:bg-muted sm:px-4 sm:py-2 sm:text-base">
                     Batal
                 </button>
-                <button type="button" @click="tambahKeTabel" :disabled="!searchBandWidth || !formData.id_produk"
-                    :class="[
-                        !searchBandWidth || !formData.id_produk
-                            ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
-                            : 'bg-blue-600 text-white shadow-lg shadow-blue-500/30 hover:bg-blue-700'
-                    ]"
-                    class="flex-1 rounded-xl py-2.5 text-sm font-bold transition-all">
-                    + Masukkan Keranjang
+                <button type="button" @click="tambahKeTabel" :disabled="!searchBandWidth || !formData.id_produk" :class="[
+                    !searchBandWidth || !formData.id_produk
+                        ? 'bg-gray-400 cursor-not-allowed'
+                        : 'bg-blue-600 hover:bg-blue-700'
+                ]"
+                    class="flex-1 rounded-lg px-3 py-1.5 text-sm text-white transition-colors sm:px-4 sm:py-2 sm:text-base">
+                    Tambah Produk
                 </button>
             </div>
-        </div>
-    </div>
-
-    <!-- Modal Success -->
-    <div v-if="showSuccessModal"
-        class="fixed inset-0 z-[70] flex items-center justify-center bg-black/40 backdrop-blur-sm p-4 transition-all">
-        <div class="w-full max-w-md rounded-3xl bg-white p-8 shadow-2xl scale-100 transition-all animate-in">
-            <div class="text-center">
-                <div class="mx-auto w-16 h-16 bg-green-50 rounded-full flex items-center justify-center mb-4">
-                    <div class="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center">
-                        <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path>
-                        </svg>
-                    </div>
-                </div>
-                <h3 class="text-xl font-bold text-gray-900 mb-2">Berhasil!</h3>
-                <p class="text-sm text-gray-600">{{ successMessage }}</p>
-            </div>
-
-            <button @click="showSuccessModal = false"
-                class="w-full mt-6 rounded-xl bg-green-600 py-3 text-sm font-bold text-white shadow-lg shadow-green-500/30 hover:bg-green-700 hover:shadow-green-600/40 transition-all">
-                Tutup
-            </button>
         </div>
     </div>
 </template>
 
 <style>
-/* Utilities */
-.custom-scrollbar::-webkit-scrollbar {
-    height: 6px;
-    width: 6px;
-}
-.custom-scrollbar::-webkit-scrollbar-track {
-    background: #f1f5f9;
-}
-.custom-scrollbar::-webkit-scrollbar-thumb {
-    background: #cbd5e1;
-    border-radius: 10px;
-}
-.custom-scrollbar::-webkit-scrollbar-thumb:hover {
-    background: #94a3b8;
-}
-
-/* Remove Arrows from Input Number */
+/* Menghilangkan panah untuk Chrome, Safari, Edge, Opera */
 input::-webkit-outer-spin-button,
 input::-webkit-inner-spin-button {
     -webkit-appearance: none;
     margin: 0;
 }
+
+/* Menghilangkan panah untuk Firefox */
 input[type='number'] {
-    -moz-appearance: textfield;
     appearance: textfield;
+    -moz-appearance: textfield;
 }
 </style>

@@ -48,7 +48,7 @@ import { Head, Link } from '@inertiajs/vue3';
                         </div>
                     </div>
                     <span class="text-xl font-bold tracking-tight text-gray-900 dark:text-white">
-                        Telkom<span class="text-red-600">BizPortal</span>
+                        Telkom<span class="text-red-600">BizPlan</span>
                     </span>
                 </div>
             </nav>

@@ -116,12 +116,12 @@ const submit = () => {
                     </div>
 
                     <div class="space-y-1.5">
-                        <div class="flex justify-between items-center ml-1">
+                        <!-- <div class="flex justify-between items-center ml-1">
                             <label for="password" class="text-sm font-semibold text-gray-700 dark:text-gray-300">Password</label>
                             <Link v-if="canResetPassword" :href="route('password.request')" class="text-xs text-red-600 hover:text-red-700 font-bold transition-colors">
                                 Lupa Password?
                             </Link>
-                        </div>
+                        </div> -->
                         <div class="relative group">
                             <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-gray-400 group-focus-within:text-red-600 transition-colors">
                                 <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -140,7 +140,7 @@ const submit = () => {
                         <div v-if="form.errors.password" class="text-red-600 text-xs font-medium ml-1 mt-1">{{ form.errors.password }}</div>
                     </div>
 
-                    <div class="flex items-center">
+                    <!-- <div class="flex items-center">
                         <label class="flex items-center cursor-pointer group">
                             <input
                                 type="checkbox"
@@ -149,7 +149,7 @@ const submit = () => {
                             />
                             <span class="ml-2 text-sm text-gray-500 group-hover:text-gray-700 dark:text-gray-400 dark:group-hover:text-gray-300 transition-colors">Ingat Saya</span>
                         </label>
-                    </div>
+                    </div> -->
 
                     <div class="pt-2">
                         <button

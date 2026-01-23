@@ -1,25 +1,28 @@
 <?php
 
 namespace App\Http\Controllers;
+
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
+use Inertia\Inertia; // Jangan lupa import Inertia jika dipakai di showEdit
 
-class TransaksiController extends Controller
+class LaporanController extends Controller
 {
-
     public function index()
     {
         try {
-            // Mengambil data transaksi beserta children-nya menggunakan Join
-            // Kita gunakan Raw SQL untuk performa maksimal
+            // Mengambil data transaksi beserta children-nya menggunakan LEFT JOIN
+            // Raw SQL digunakan untuk performa maksimal
             $data = DB::select("
-                SELECT 
-                    t.id_transaksi,
+                SELECT
+                    t.id_transaksi AS id_laporan, -- Alias agar seragam dengan child
                     t.netdiskon,
                     t.total_harga,
                     t.created_at,
+                    t.updated_at,
                     t.pelanggan,
+                    -- Transaksi Children --
                     tc.id_produk,
                     tc.nama_produk,
                     tc.harga_produk,
@@ -33,20 +36,20 @@ class TransaksiController extends Controller
                     tc.ppn_produk,
                     tc.ppn_otc,
                     tc.produk_final,
-                    tc.otc_final
+                    tc.otc_final,
+                    tc.subtotal,
+                    tc.bandwidth
                 FROM transaksi t
-                LEFT JOIN transaksi_children tc ON t.id_transaksi = tc.id_transaksi
+                LEFT JOIN transaksi_children tc ON t.id_transaksi = tc.id_laporan
                 ORDER BY t.created_at DESC
             ");
 
-            DB::commit();
             return response()->json([
                 'status' => 'success',
                 'data' => $data
             ], 200);
 
         } catch (\Exception $e) {
-            DB::rollBack(); // Batalkan jika ada error
             return response()->json([
                 'status' => 'error',
                 'message' => 'Gagal mengambil data: ' . $e->getMessage()
@@ -56,19 +59,19 @@ class TransaksiController extends Controller
 
     public function store(Request $request)
     {
-        // Memulai Database Transaction untuk keamanan data
+        // Memulai Database Transaction
         DB::beginTransaction();
 
         try {
-            $id_transaksi = 'TRX-' . strtoupper(Str::random(8));
+            $id_laporan = 'TRX-' . strtoupper(Str::random(8));
             $now = now();
 
-            // 1. Insert ke tabel 'transaksi' menggunakan Raw SQL
+            // 1. Insert ke tabel 'transaksi' (Parent)
             DB::insert("
                 INSERT INTO transaksi (id_transaksi, total_harga, pelanggan, netdiskon, created_at, updated_at)
                 VALUES (?, ?, ?, ?, ?, ?)
             ", [
-                $id_transaksi,
+                $id_laporan,
                 $request->total_harga,
                 strtolower($request->nama_pelanggan),
                 $request->netDiskon,
@@ -76,23 +79,22 @@ class TransaksiController extends Controller
                 $now
             ]);
 
-            // 2. Insert ke tabel 'transaksi_children' menggunakan Raw SQL
-            // Kita gunakan loop untuk menyiapkan data
+            // 2. Insert ke tabel 'transaksi_children' (Detail)
             foreach ($request->items as $item) {
                 DB::insert("
                     INSERT INTO transaksi_children (
-                        id_transaksi, id_produk, nama_produk, harga_produk, bandwidth, 
-                        jumlah, durasi, harga_otc, diskon_produk, diskon_otc, 
-                        nominal_diskon_produk, nominal_diskon_otc, ppn_produk, 
+                        id_laporan, id_produk, nama_produk, harga_produk, bandwidth,
+                        jumlah, durasi, harga_otc, diskon_produk, diskon_otc,
+                        nominal_diskon_produk, nominal_diskon_otc, ppn_produk,
                         ppn_otc, produk_final, otc_final, subtotal
-                    ) 
+                    )
                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 ", [
-                    $id_transaksi,
+                    $id_laporan,
                     $item['id_produk'],
                     $item['nama_produk'],
                     $item['harga_produk'],
-                    $item['bandwidth'],
+                    $item['bandwidth'] ?? null,
                     $item['jumlah'],
                     $item['durasi'],
                     $item['harga_otc'],
@@ -122,16 +124,18 @@ class TransaksiController extends Controller
 
     public function destroy($id)
     {
-        // Kita tidak butuh DB::beginTransaction() jika hanya menjalankan SATU perintah delete
-        // karena ON DELETE CASCADE sudah ditangani secara atomik oleh Database.
         try {
-            // Cukup hapus induknya saja, children akan otomatis terhapus oleh Database
+            // Hapus Transaksi Induk
+            // Pastikan database Anda support ON DELETE CASCADE pada Foreign Key
+            // Jika tidak, Anda harus menghapus children dulu manual:
+            // DB::delete("DELETE FROM transaksi_children WHERE id_laporan = ?", [$id]);
+
             $deleted = DB::delete("DELETE FROM transaksi WHERE id_transaksi = ?", [$id]);
 
             if ($deleted) {
                 return response()->json([
                     'status' => 'success',
-                    'message' => 'Laporan dan rinciannya berhasil dihapus'
+                    'message' => 'Laporan berhasil dihapus'
                 ], 200);
             }
 
@@ -150,39 +154,41 @@ class TransaksiController extends Controller
 
     public function showEdit($id)
     {
-        // Ambil data transaksi beserta detailnya
+        // Ambil data gabungan untuk keperluan Edit
         $data = DB::select("
-        SELECT t.*, tc.* FROM transaksi t
-        LEFT JOIN transaksi_children tc ON t.id_transaksi = tc.id_transaksi
-        WHERE t.id_transaksi = ?
-    ", [$id]);
+            SELECT t.*, tc.* FROM transaksi t
+            LEFT JOIN transaksi_children tc ON t.id_transaksi = tc.id_laporan
+            WHERE t.id_transaksi = ?
+        ", [$id]);
 
         if (empty($data)) {
+            // Jika request API return JSON, jika Inertia return redirect/render
+            if (request()->wantsJson()) {
+                 return response()->json(['error' => 'Data tidak ditemukan'], 404);
+            }
             return redirect()->back()->with('error', 'Data tidak ditemukan');
         }
 
-        return \Inertia\Inertia::render('LaporanEdit', [
-            'id_transaksi' => $id,
+        return Inertia::render('LaporanEdit', [
+            'id_laporan' => $id,
             'transaksi_lama' => $data
         ]);
     }
 
     public function update(Request $request, $id)
     {
-        // Gunakan Transaction agar jika salah satu insert gagal, data lama tidak terhapus
         DB::beginTransaction();
 
         try {
-            // 1. Update data induk (tabel transaksi)
-            // Kita gunakan strtolower sesuai kebiasaan di database Anda
+            // 1. Update data induk (transaksi)
             DB::update("
-            UPDATE transaksi 
-            SET pelanggan = ?, 
-                total_harga = ?, 
-                netdiskon = ?, 
-                updated_at = ? 
-            WHERE id_transaksi = ?
-        ", [
+                UPDATE transaksi
+                SET pelanggan = ?,
+                    total_harga = ?,
+                    netdiskon = ?,
+                    updated_at = ?
+                WHERE id_transaksi = ?
+            ", [
                 strtolower($request->nama_pelanggan),
                 $request->total_harga,
                 $request->netDiskon,
@@ -190,39 +196,27 @@ class TransaksiController extends Controller
                 $id
             ]);
 
-            // 2. Hapus semua detail lama berdasarkan ID transaksi
-            DB::delete("DELETE FROM transaksi_children WHERE id_transaksi = ?", [$id]);
+            // 2. Hapus detail lama (Reset children)
+            DB::delete("DELETE FROM transaksi_children WHERE id_laporan = ?", [$id]);
 
-            // 3. Masukkan kembali item baru dari keranjang (daftarKeranjang di Vue)
+            // 3. Masukkan item baru
             foreach ($request->items as $item) {
                 DB::insert("
-                INSERT INTO transaksi_children (
-                    id_transaksi, 
-                    id_produk, 
-                    nama_produk, 
-                    harga_produk, 
-                    bandwidth,
-                    jumlah, 
-                    durasi, 
-                    harga_otc, 
-                    diskon_produk, 
-                    diskon_otc, 
-                    nominal_diskon_produk, 
-                    nominal_diskon_otc, 
-                    ppn_produk, 
-                    ppn_otc, 
-                    produk_final, 
-                    otc_final, 
-                    subtotal
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-            ", [
+                    INSERT INTO transaksi_children (
+                        id_laporan, id_produk, nama_produk, harga_produk, bandwidth,
+                        jumlah, durasi, harga_otc, diskon_produk, diskon_otc,
+                        nominal_diskon_produk, nominal_diskon_otc, ppn_produk,
+                        ppn_otc, produk_final, otc_final, subtotal
+                    )
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ", [
                     $id,
                     $item['id_produk'],
                     $item['nama_produk'],
                     $item['harga_produk'],
-                    $item['bandwidth'],
-                    $item['jumlah'], // Ini memetakan ke 'kuantitas' di Vue
-                    $item['durasi'], // Ini memetakan ke 'bulan' di Vue
+                    $item['bandwidth'] ?? null,
+                    $item['jumlah'],
+                    $item['durasi'],
                     $item['harga_otc'],
                     $item['diskon_produk'],
                     $item['diskon_otc'],
@@ -245,10 +239,30 @@ class TransaksiController extends Controller
 
         } catch (\Exception $e) {
             DB::rollBack();
-
             return response()->json([
                 'status' => 'error',
                 'message' => 'Gagal memperbarui data: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function deleteAllLaporan()
+    {
+        // TRUNCATE TABLE ... CASCADE adalah syntax PostgreSQL.
+        // Untuk MySQL/MariaDB, kita harus mematikan FK Check dulu jika ingin Truncate
+        try {
+            DB::statement('SET FOREIGN_KEY_CHECKS=0;');
+            DB::table('transaksi_children')->truncate();
+            DB::table('transaksi')->truncate();
+            DB::statement('SET FOREIGN_KEY_CHECKS=1;');
+
+            return response()->json([
+                'message' => 'Semua data transaksi berhasil dihapus dan ID direset.'
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Gagal menghapus semua data.',
+                'error' => $e->getMessage()
             ], 500);
         }
     }

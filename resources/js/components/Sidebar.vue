@@ -45,7 +45,7 @@ const handleLogout = () => {
                 </div>
                 <div>
                     <h1 class="text-lg font-bold text-gray-900 tracking-tight leading-none">
-                        Telkom<span class="text-red-600">BizPortal</span>
+                        Telkom<span class="text-red-600">BizPlan</span>
                     </h1>
                     <p class="text-[10px] text-gray-500 font-medium mt-1 uppercase tracking-wider">Admin Dashboard</p>
                 </div>
