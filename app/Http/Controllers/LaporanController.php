@@ -11,7 +11,7 @@ class LaporanController extends Controller
     {
         try {
             // Mengambil data transaksi beserta children-nya menggunakan LEFT JOIN
-            // Raw SQL digunakan untuk performa maksimal
+            // Raw SQL digunakan untuk performa maksimal-maksimal
             $data = DB::select("
                 SELECT
                     t.id_transaksi AS id_laporan, -- Alias agar seragam dengan child
