@@ -35,6 +35,7 @@ const fetchData = async () => {
   try {
     const response = await axios.get('/api/laporan');
     rawData.value = response.data.data;
+    console.log("Data dashboard berhasil diambil:", rawData.value);
   } catch (error) {
     console.error("Gagal mengambil data dashboard:", error);
   } finally {
