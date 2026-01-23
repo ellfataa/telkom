@@ -66,6 +66,7 @@ const uniqueTransactions = computed(() => {
 
 // 2. Statistik Utama (Cards)
 const stats = computed(() => {
+
   const txs = uniqueTransactions.value;
 
   // A. Total Penawaran
