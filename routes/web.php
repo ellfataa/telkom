@@ -27,6 +27,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
         return Inertia::render('Home');
     })->name('home');
 
+    Route::get('/dashboard', function () {
+        return view('dashboard');
+    })->name('dashboard');
+
     // Menu Kalkulator
     Route::get('/kalkulator', function () {
         return Inertia::render('Kalkulator');
