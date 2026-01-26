@@ -1,15 +1,12 @@
 <script setup lang="ts">
 import { Head, Link } from '@inertiajs/vue3';
+import { Building2, LogIn, ArrowRight } from 'lucide-vue-next';
 </script>
 
 <template>
-    <Head title="Welcome">
-        <link rel="preconnect" href="https://fonts.googleapis.com">
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous">
-        <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    </Head>
+    <Head title="Welcome" />
 
-    <div class="min-h-screen w-full flex flex-col lg:flex-row font-['Plus_Jakarta_Sans',sans-serif] selection:bg-red-500 selection:text-white dark:bg-[#050505] dark:text-gray-100 overflow-hidden relative isolate">
+    <div class="min-h-screen w-full flex flex-col lg:flex-row font-sans selection:bg-red-500 selection:text-white dark:bg-[#050505] dark:text-gray-100 overflow-hidden relative isolate">
 
         <div class="relative w-full lg:w-[45%] h-[30vh] lg:h-auto lg:min-h-screen order-first lg:order-last overflow-hidden bg-gray-900 border-b lg:border-b-0 lg:border-l border-gray-200 dark:border-gray-800">
             <img
@@ -23,7 +20,7 @@ import { Head, Link } from '@inertiajs/vue3';
             <div class="absolute bottom-6 right-6 lg:bottom-10 lg:right-10 bg-white/10 backdrop-blur-md p-4 rounded-2xl shadow-2xl border border-white/20 z-20 animate-fade-in-up delay-300">
                 <div class="flex items-center gap-3">
                     <div class="flex items-center justify-center w-10 h-10 bg-red-600 rounded-full shadow-lg shadow-red-600/30">
-                        <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg>
+                        <Building2 class="w-5 h-5 text-white" />
                     </div>
                     <div>
                         <p class="font-bold text-white text-sm leading-tight tracking-wide">Telkom Landmark</p>
@@ -43,7 +40,7 @@ import { Head, Link } from '@inertiajs/vue3';
             <nav class="w-full px-6 lg:px-16 py-6 flex justify-between items-center z-20">
                 <div class="flex items-center gap-3 select-none">
                     <div class="relative w-10 h-10 flex items-center justify-center">
-                        <div class="relative w-full h-full bg-transparent rounded-xl flex items-center justify-center text-white font-bold text-xl shadow-lg shadow-red-500/20">
+                        <div class="relative w-full h-full bg-transparent rounded-xl flex items-center justify-center shadow-lg shadow-red-500/20">
                             <img src="/image/logo-telkom.png" alt="Logo Telkom Indonesia" class="w-6 h-6"/>
                         </div>
                     </div>
@@ -76,16 +73,16 @@ import { Head, Link } from '@inertiajs/vue3';
                             <div class="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:animate-shimmer"></div>
                             <span class="relative flex items-center justify-center gap-3">
                                 Masuk Akun
-                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+                                <LogIn class="w-5 h-5" />
                             </span>
                         </Link>
 
                         <Link
                             href="/register"
-                            class="px-8 py-3.5 bg-transparent text-gray-700 dark:text-gray-200 border-2 border-gray-200 dark:border-gray-800 font-bold rounded-2xl hover:border-red-600 hover:text-red-600 dark:hover:border-red-500 dark:hover:text-red-400 transition-all duration-300 transform hover:-translate-y-1 text-center"
+                            class="flex items-center justify-center gap-2 px-8 py-3.5 bg-transparent text-gray-700 dark:text-gray-200 border-2 border-gray-200 dark:border-gray-800 font-bold rounded-2xl hover:border-red-600 hover:text-red-600 dark:hover:border-red-500 dark:hover:text-red-400 transition-all duration-300 transform hover:-translate-y-1"
                         >
                             Daftar Sekarang
-                        </Link>
+                            </Link>
                     </div>
 
                     <div class="pt-8 border-t border-gray-100 dark:border-gray-800/50 flex items-center justify-center lg:justify-start gap-8 animate-fade-in-up delay-200">
@@ -132,5 +129,6 @@ import { Head, Link } from '@inertiajs/vue3';
 
 .mask-image-gradient {
     mask-image: linear-gradient(to bottom, rgba(0,0,0,1) 60%, rgba(0,0,0,0));
+    -webkit-mask-image: linear-gradient(to bottom, rgba(0,0,0,1) 60%, rgba(0,0,0,0));
 }
 </style>

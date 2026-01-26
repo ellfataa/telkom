@@ -1,16 +1,14 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
 import Sidebar from '@/components/Sidebar.vue';
-import { Calendar } from 'lucide-vue-next';
 import axios from 'axios';
+// Import Icon dari Lucide
+import {
+  Calendar, TrendingUp, FileText, Users, BarChart3,
+  Activity, Trophy, ArrowUpRight, Wifi, Loader2, TrendingDown
+} from 'lucide-vue-next';
 
-interface LaporanChild {
-  nama_produk: string;
-  subtotal: number;
-  kategori?: string;
-  bandwidth?: number;
-}
-
+// Interface diperbaiki agar mendukung field nominal_diskon tanpa 'as any'
 interface LaporanRaw {
   id_laporan: string;
   total_harga: number;
@@ -25,7 +23,10 @@ interface LaporanRaw {
   jumlah: number;
   produk_final: number;
   subtotal: number;
-  kategori:string;
+  kategori: string;
+  // Tambahan field optional
+  nominal_diskon_produk?: number;
+  nominal_diskon_otc?: number;
 }
 
 const rawData = ref<LaporanRaw[]>([]);
@@ -84,8 +85,9 @@ const stats = computed(() => {
   const avgOffer = totalTx > 0 ? totalOffer / totalTx : 0;
 
   // E. Total Diskon (Estimasi dari netdiskon persen ke nominal kasar)
+  // Type safe karena interface sudah diupdate
   const totalDiscountReal = rawData.value.reduce((acc, curr) => {
-     return acc + (Number((curr as any).nominal_diskon_produk || 0) + Number((curr as any).nominal_diskon_otc || 0));
+     return acc + (Number(curr.nominal_diskon_produk || 0) + Number(curr.nominal_diskon_otc || 0));
   }, 0);
 
   // F. Total Bandwidth
@@ -127,6 +129,7 @@ const categoryStats = computed(() => {
       revenue: astinetRevenue,
       transactions: astinetCount,
       color: 'from-blue-500 to-blue-600',
+      bgIcon: 'bg-blue-100 text-blue-600', // Helper class untuk icon
       percentage: ((astinetRevenue / totalRev) * 100).toFixed(1)
     },
     {
@@ -134,6 +137,7 @@ const categoryStats = computed(() => {
       revenue: indibizRevenue,
       transactions: indibizCount,
       color: 'from-purple-500 to-purple-600',
+      bgIcon: 'bg-purple-100 text-purple-600', // Helper class untuk icon
       percentage: ((indibizRevenue / totalRev) * 100).toFixed(1)
     }
   ];
@@ -225,7 +229,7 @@ const formatNumber = (value: number) => {
 
 <template>
   <Sidebar>
-    <div class="space-y-6">
+    <div class="space-y-6 font-sans">
       <div class="flex items-center justify-between">
         <div>
           <h1
@@ -243,25 +247,21 @@ const formatNumber = (value: number) => {
         </div>
       </div>
 
-      <div v-if="isLoading" class="p-10 text-center">
-         <p class="text-lg font-semibold text-blue-600 animate-pulse">Memuat Data Dashboard...</p>
+      <div v-if="isLoading" class="h-64 flex flex-col items-center justify-center text-center">
+         <Loader2 class="w-10 h-10 text-blue-600 animate-spin mb-4" />
+         <p class="text-lg font-semibold text-gray-500 animate-pulse">Memuat Data Dashboard...</p>
       </div>
 
       <div v-else class="space-y-6 animate-in fade-in zoom-in duration-300">
 
-        <div class="grid gap-4 grid-cols-2">
-          <div
-            class="group relative overflow-hidden rounded-xl border bg-card p-6 transition-all hover:shadow-xl hover:shadow-blue-500/10">
-            <div
-              class="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-blue-500/10 to-transparent rounded-full -mr-16 -mt-16">
-            </div>
+        <div class="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
+
+          <div class="group relative overflow-hidden rounded-xl border bg-card p-6 transition-all hover:shadow-xl hover:shadow-blue-500/10">
+            <div class="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-blue-500/10 to-transparent rounded-full -mr-16 -mt-16 transition-transform group-hover:scale-110"></div>
             <div class="relative">
               <div class="flex items-center justify-between mb-4">
                 <div class="p-3 rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 shadow-lg shadow-blue-500/30">
-                  <svg class="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                      d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
+                  <TrendingUp class="w-6 h-6 text-white" />
                 </div>
               </div>
               <h3 class="text-sm font-medium text-muted-foreground mb-1">Total Penawaran</h3>
@@ -270,19 +270,12 @@ const formatNumber = (value: number) => {
             </div>
           </div>
 
-          <div
-            class="group relative overflow-hidden rounded-xl border bg-card p-6 transition-all hover:shadow-xl hover:shadow-purple-500/10">
-            <div
-              class="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-purple-500/10 to-transparent rounded-full -mr-16 -mt-16">
-            </div>
+          <div class="group relative overflow-hidden rounded-xl border bg-card p-6 transition-all hover:shadow-xl hover:shadow-purple-500/10">
+            <div class="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-purple-500/10 to-transparent rounded-full -mr-16 -mt-16 transition-transform group-hover:scale-110"></div>
             <div class="relative">
               <div class="flex items-center justify-between mb-4">
-                <div
-                  class="p-3 rounded-xl bg-gradient-to-br from-purple-500 to-purple-600 shadow-lg shadow-purple-500/30">
-                  <svg class="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                      d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-                  </svg>
+                <div class="p-3 rounded-xl bg-gradient-to-br from-purple-500 to-purple-600 shadow-lg shadow-purple-500/30">
+                  <FileText class="w-6 h-6 text-white" />
                 </div>
               </div>
               <h3 class="text-sm font-medium text-muted-foreground mb-1">Total Transaksi</h3>
@@ -291,18 +284,12 @@ const formatNumber = (value: number) => {
             </div>
           </div>
 
-          <div
-            class="group relative overflow-hidden rounded-xl border bg-card p-6 transition-all hover:shadow-xl hover:shadow-green-500/10">
-            <div
-              class="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-green-500/10 to-transparent rounded-full -mr-16 -mt-16">
-            </div>
+          <div class="group relative overflow-hidden rounded-xl border bg-card p-6 transition-all hover:shadow-xl hover:shadow-green-500/10">
+            <div class="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-green-500/10 to-transparent rounded-full -mr-16 -mt-16 transition-transform group-hover:scale-110"></div>
             <div class="relative">
               <div class="flex items-center justify-between mb-4">
                 <div class="p-3 rounded-xl bg-gradient-to-br from-green-500 to-green-600 shadow-lg shadow-green-500/30">
-                  <svg class="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                      d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                  </svg>
+                  <Users class="w-6 h-6 text-white" />
                 </div>
               </div>
               <h3 class="text-sm font-medium text-muted-foreground mb-1">Total Pelanggan</h3>
@@ -311,19 +298,12 @@ const formatNumber = (value: number) => {
             </div>
           </div>
 
-          <div
-            class="group relative overflow-hidden rounded-xl border bg-card p-6 transition-all hover:shadow-xl hover:shadow-orange-500/10">
-            <div
-              class="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-orange-500/10 to-transparent rounded-full -mr-16 -mt-16">
-            </div>
+          <div class="group relative overflow-hidden rounded-xl border bg-card p-6 transition-all hover:shadow-xl hover:shadow-orange-500/10">
+            <div class="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-orange-500/10 to-transparent rounded-full -mr-16 -mt-16 transition-transform group-hover:scale-110"></div>
             <div class="relative">
               <div class="flex items-center justify-between mb-4">
-                <div
-                  class="p-3 rounded-xl bg-gradient-to-br from-orange-500 to-orange-600 shadow-lg shadow-orange-500/30">
-                  <svg class="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                      d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                  </svg>
+                <div class="p-3 rounded-xl bg-gradient-to-br from-orange-500 to-orange-600 shadow-lg shadow-orange-500/30">
+                  <BarChart3 class="w-6 h-6 text-white" />
                 </div>
               </div>
               <h3 class="text-sm font-medium text-muted-foreground mb-1">Rata-rata Penawaran</h3>
@@ -338,12 +318,7 @@ const formatNumber = (value: number) => {
           <div class="rounded-xl border bg-card overflow-hidden shadow-sm">
             <div class="p-6 border-b bg-gradient-to-r from-muted/50 to-muted/30">
               <h3 class="text-lg font-semibold flex items-center gap-2">
-                <svg class="w-5 h-5 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                    d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z" />
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                    d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z" />
-                </svg>
+                <Activity class="w-5 h-5 text-primary" />
                 Astinet vs Indibiz
               </h3>
               <p class="text-sm text-muted-foreground mt-1">Komparasi pendapatan kategori</p>
@@ -353,8 +328,7 @@ const formatNumber = (value: number) => {
                 <div v-for="(category, index) in categoryStats" :key="index" class="group">
                   <div class="flex items-center justify-between mb-3">
                     <div class="flex items-center gap-3">
-                      <div
-                        :class="['w-12 h-12 rounded-xl bg-gradient-to-br', category.color, 'flex items-center justify-center text-white font-bold text-lg shadow-lg']">
+                      <div :class="['w-12 h-12 rounded-xl flex items-center justify-center font-bold text-lg', category.bgIcon]">
                         {{ category.name.substring(0, 1) }}
                       </div>
                       <div>
@@ -382,10 +356,7 @@ const formatNumber = (value: number) => {
           <div class="rounded-xl border bg-card overflow-hidden shadow-sm">
             <div class="p-6 border-b bg-gradient-to-r from-muted/50 to-muted/30">
               <h3 class="text-lg font-semibold flex items-center gap-2">
-                <svg class="w-5 h-5 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                    d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
-                </svg>
+                <Trophy class="w-5 h-5 text-primary" />
                 Produk Terlaris
               </h3>
               <p class="text-sm text-muted-foreground mt-1">Top 5 produk berdasarkan pendapatan</p>
@@ -431,15 +402,12 @@ const formatNumber = (value: number) => {
             <div class="flex items-center justify-between">
               <div>
                 <h3 class="text-lg font-semibold flex items-center gap-2">
-                  <svg class="w-5 h-5 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                      d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
+                  <ArrowUpRight class="w-5 h-5 text-primary" />
                   Transaksi Terbaru
                 </h3>
                 <p class="text-sm text-muted-foreground mt-1">Aktivitas penawaran terkini</p>
               </div>
-              <Link href="/laporan" class="text-sm text-primary hover:underline font-medium">Lihat Semua</Link>
+              <a href="/laporan" class="text-sm text-primary hover:underline font-medium">Lihat Semua</a>
             </div>
           </div>
           <div class="divide-y">
@@ -448,10 +416,7 @@ const formatNumber = (value: number) => {
               <div class="flex items-center gap-4">
                 <div
                   class="w-12 h-12 rounded-xl bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform">
-                  <svg class="w-6 h-6 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                      d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                  </svg>
+                  <FileText class="w-6 h-6 text-primary" />
                 </div>
                 <div class="flex-1 min-w-0">
                   <div class="flex items-center gap-2 mb-1">
@@ -483,13 +448,11 @@ const formatNumber = (value: number) => {
         </div>
 
         <div class="grid gap-4 md:grid-cols-3">
+
           <div class="rounded-xl border bg-card p-6 hover:shadow-lg transition-all">
             <div class="flex items-center gap-3 mb-3">
               <div class="p-2 rounded-lg bg-red-100 dark:bg-red-900/30">
-                <svg class="w-5 h-5 text-red-600 dark:text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                    d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
-                </svg>
+                <TrendingDown class="w-5 h-5 text-red-600 dark:text-red-400" />
               </div>
               <h3 class="font-semibold text-sm">Total Diskon</h3>
             </div>
@@ -500,10 +463,7 @@ const formatNumber = (value: number) => {
           <div class="rounded-xl border bg-card p-6 hover:shadow-lg transition-all">
             <div class="flex items-center gap-3 mb-3">
               <div class="p-2 rounded-lg bg-cyan-100 dark:bg-cyan-900/30">
-                <svg class="w-5 h-5 text-cyan-600 dark:text-cyan-400" fill="none" viewBox="0 0 24 24"
-                  stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
-                </svg>
+                <Wifi class="w-5 h-5 text-cyan-600 dark:text-cyan-400" />
               </div>
               <h3 class="font-semibold text-sm">Total Bandwidth</h3>
             </div>
@@ -514,11 +474,7 @@ const formatNumber = (value: number) => {
           <div class="rounded-xl border bg-card p-6 hover:shadow-lg transition-all">
             <div class="flex items-center gap-3 mb-3">
               <div class="p-2 rounded-lg bg-amber-100 dark:bg-amber-900/30">
-                <svg class="w-5 h-5 text-amber-600 dark:text-amber-400" fill="none" viewBox="0 0 24 24"
-                  stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                    d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
-                </svg>
+                <Trophy class="w-5 h-5 text-amber-600 dark:text-amber-400" />
               </div>
               <h3 class="font-semibold text-sm">Top Potensial</h3>
             </div>

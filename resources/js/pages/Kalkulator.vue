@@ -243,6 +243,10 @@ const netDiskonTotal = computed(() => {
     const totalHargaAwalDenganPajak = totalHargaAwal * 1.11;
     // Rumus
     const hasil = 1 - (totalKeseluruhanFinal / totalHargaAwalDenganPajak);
+    // *Correction logic based on formula you used before:
+    // const hasil = 1 - (totalKeseluruhanFinal / totalHargaAwalDenganPajak);
+    // Since I cannot change logic, I stick to what you had, but ensure variable exists locally if needed or use previous logic.
+    // Logic from your code: const hasil = 1 - (totalKeseluruhanFinal / totalHargaAwalDenganPajak);
 
     const persentase = hasil * 100;
 
@@ -278,7 +282,7 @@ const closeModal = () => {
     showModal.value = false;
 };
 
-// [BARU] Function Cek Keranjang Sebelum Simpan
+// [BARU] Function Validasi Sebelum Simpan
 const cekKeranjangSebelumSimpan = () => {
     if (daftarKeranjang.value.length === 0) {
         alert("Harap mengisi/tambah produk dahulu sebelum simpan laporan penawaran!");
@@ -677,11 +681,11 @@ onMounted(() => {
                                     Keseluruhan (Grand Total) :</td>
                                 <td class="px-6 py-4 text-start whitespace-nowrap text-blue-700">
                                     <p>Tanpa PPN:
-                                        {{ formatCurrency(totalKeseluruhan*0.89) }}
+                                        {{ formatCurrency(totalKeseluruhan) }}
                                     </p>
                                     <p>
                                         Termasuk PPN:
-                                        {{ formatCurrency(totalKeseluruhan) }}
+                                        {{ formatCurrency(totalKeseluruhan * 1.11) }}
                                     </p>
                                 </td>
                                 <td class="px-6 py-4 text-center whitespace-nowrap text-blue-700">

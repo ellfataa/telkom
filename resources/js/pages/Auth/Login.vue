@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { Head, Link, useForm } from '@inertiajs/vue3';
 import { route } from 'ziggy-js';
+import { Mail, Lock, ArrowLeft, LogIn, Loader2, ShieldCheck } from 'lucide-vue-next';
 
 defineProps<{
     canResetPassword?: boolean;
@@ -29,7 +30,7 @@ const submit = () => {
         <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     </Head>
 
-    <div class="min-h-screen w-full flex flex-col lg:flex-row font-['Plus_Jakarta_Sans',sans-serif] selection:bg-red-500 selection:text-white dark:bg-[#050505] dark:text-gray-100 overflow-hidden relative isolate">
+    <div class="min-h-screen w-full flex flex-col lg:flex-row font-sans selection:bg-red-500 selection:text-white dark:bg-[#050505] dark:text-gray-100 overflow-hidden relative isolate">
 
         <div class="relative w-full lg:w-[50%] h-[15vh] lg:h-auto lg:min-h-screen order-first overflow-hidden bg-gray-900 border-b lg:border-b-0 lg:border-r border-gray-200 dark:border-gray-800 lg:sticky lg:top-0">
 
@@ -40,16 +41,13 @@ const submit = () => {
             >
 
             <div class="absolute inset-0 bg-gradient-to-t from-[#050505] via-gray-900/50 to-transparent lg:bg-gradient-to-r lg:from-[#050505] lg:via-gray-900/30 lg:to-transparent"></div>
-
             <div class="absolute inset-0 opacity-20 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] mix-blend-overlay"></div>
 
             <div class="hidden lg:flex absolute bottom-0 left-0 w-full p-12 z-20 flex-col justify-end h-full">
                  <div class="bg-white/10 backdrop-blur-md border border-white/10 p-6 rounded-3xl shadow-2xl animate-fade-in-up delay-300 lg:mb-6">
                     <div class="flex items-start gap-4">
                         <div class="p-3 bg-gradient-to-br from-red-600 to-red-700 rounded-2xl shrink-0 shadow-lg shadow-red-600/20 flex items-center justify-center">
-                            <svg class="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-                            </svg>
+                            <ShieldCheck class="w-6 h-6 text-white" />
                         </div>
                         <div>
                             <h3 class="text-xl font-bold text-white mb-1 tracking-tight">Autentikasi</h3>
@@ -69,12 +67,19 @@ const submit = () => {
                  <div class="absolute top-[5%] right-[5%] w-[400px] h-[400px] bg-red-500/5 rounded-full blur-[120px]"></div>
             </div>
 
-            <div class="lg:hidden absolute top-4 left-6 flex items-center gap-2">
+            <div class="absolute top-6 left-6 lg:top-8 lg:left-12 z-30">
+                <Link href="/" class="group flex items-center gap-2 text-sm font-semibold text-gray-500 hover:text-red-600 transition-colors">
+                    <ArrowLeft class="w-4 h-4 transition-transform group-hover:-translate-x-1" />
+                    <span>Kembali</span>
+                </Link>
+            </div>
+            <br>
+
+            <div class="lg:hidden absolute top-4 right-6 flex items-center gap-2 z-30">
                  <div class="w-8 h-8 bg-gradient-to-br from-red-600 to-red-700 rounded-lg flex items-center justify-center text-white font-bold shadow-md">T</div>
-                 <span class="font-bold text-gray-900 dark:text-white tracking-tight">Telkom<span class="text-red-600">Portal</span></span>
             </div>
 
-            <div class="w-full max-w-[480px] mx-auto px-6 lg:px-12 animate-fade-in-up">
+            <div class="w-full max-w-[480px] mx-auto px-6 lg:px-12 animate-fade-in-up pt-10 lg:pt-0">
 
                 <div class="mb-8">
                     <h1 class="text-3xl lg:text-4xl font-extrabold text-gray-900 dark:text-white tracking-tight mb-2">
@@ -86,7 +91,7 @@ const submit = () => {
                 </div>
 
                 <div v-if="status" class="mb-6 p-4 rounded-2xl bg-green-50 border border-green-100 text-green-700 text-sm font-semibold flex items-center gap-3 animate-fade-in-up">
-                    <svg class="w-5 h-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                    <ShieldCheck class="w-5 h-5 shrink-0" />
                     {{ status }}
                 </div>
 
@@ -96,9 +101,7 @@ const submit = () => {
                         <label for="email" class="text-sm font-semibold text-gray-700 dark:text-gray-300 ml-1">Email</label>
                         <div class="relative group">
                             <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-gray-400 group-focus-within:text-red-600 transition-colors">
-                                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                                </svg>
+                                <Mail class="w-5 h-5" />
                             </div>
                             <input
                                 id="email"
@@ -116,17 +119,10 @@ const submit = () => {
                     </div>
 
                     <div class="space-y-1.5">
-                        <!-- <div class="flex justify-between items-center ml-1">
-                            <label for="password" class="text-sm font-semibold text-gray-700 dark:text-gray-300">Password</label>
-                            <Link v-if="canResetPassword" :href="route('password.request')" class="text-xs text-red-600 hover:text-red-700 font-bold transition-colors">
-                                Lupa Password?
-                            </Link>
-                        </div> -->
+                        <label for="password" class="text-sm font-semibold text-gray-700 dark:text-gray-300 ml-1">Password</label>
                         <div class="relative group">
                             <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-gray-400 group-focus-within:text-red-600 transition-colors">
-                                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                                </svg>
+                                <Lock class="w-5 h-5" />
                             </div>
                             <input
                                 id="password"
@@ -140,17 +136,6 @@ const submit = () => {
                         <div v-if="form.errors.password" class="text-red-600 text-xs font-medium ml-1 mt-1">{{ form.errors.password }}</div>
                     </div>
 
-                    <!-- <div class="flex items-center">
-                        <label class="flex items-center cursor-pointer group">
-                            <input
-                                type="checkbox"
-                                v-model="form.remember"
-                                class="w-4 h-4 text-red-600 border-gray-300 rounded focus:ring-red-500 transition-all cursor-pointer"
-                            />
-                            <span class="ml-2 text-sm text-gray-500 group-hover:text-gray-700 dark:text-gray-400 dark:group-hover:text-gray-300 transition-colors">Ingat Saya</span>
-                        </label>
-                    </div> -->
-
                     <div class="pt-2">
                         <button
                             :class="{ 'opacity-70 cursor-not-allowed': form.processing }"
@@ -159,15 +144,12 @@ const submit = () => {
                         >
                             <div class="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:animate-shimmer"></div>
                             <span v-if="form.processing" class="flex items-center justify-center gap-2 relative">
-                                <svg class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                </svg>
+                                <Loader2 class="animate-spin h-5 w-5 text-white" />
                                 Memproses...
                             </span>
                             <span v-else class="relative flex items-center justify-center gap-2">
                                 Masuk Akun
-                                <svg class="w-5 h-5 transition-transform group-hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+                                <LogIn class="w-5 h-5 transition-transform group-hover:translate-x-1" />
                             </span>
                         </button>
                     </div>
@@ -194,6 +176,11 @@ const submit = () => {
 </template>
 
 <style scoped>
+/* Pastikan font family sesuai dengan config tailwind Anda */
+.font-sans {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+}
+
 .animate-fade-in-up {
     animation: fadeInUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
     opacity: 0;
