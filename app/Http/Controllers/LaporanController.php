@@ -36,9 +36,11 @@ class LaporanController extends Controller
                     tc.produk_final,
                     tc.otc_final,
                     tc.subtotal,
-                    tc.bandwidth
+                    tc.bandwidth,
+                    p.kategori
                 FROM transaksi t
                 LEFT JOIN transaksi_children tc ON t.id_transaksi = tc.id_laporan
+                LEFT JOIN produk p ON tc.id_produk = p.id_produk
                 ORDER BY t.created_at DESC
             ");
 

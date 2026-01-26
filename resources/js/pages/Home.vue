@@ -25,6 +25,7 @@ interface LaporanRaw {
   jumlah: number;
   produk_final: number;
   subtotal: number;
+  kategori:string;
 }
 
 const rawData = ref<LaporanRaw[]>([]);
@@ -108,7 +109,7 @@ const categoryStats = computed(() => {
   let indibizRevenue = 0;
 
   rawData.value.forEach(item => {
-    const name = item.nama_produk ? item.nama_produk.toLowerCase() : '';
+    const name = item.kategori ? item.kategori.toLowerCase() : '';
     if (name.includes('astinet')) {
       astinetCount++; // Hitung item terjual
       astinetRevenue += Number(item.subtotal);
