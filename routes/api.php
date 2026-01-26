@@ -4,6 +4,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ProdukController;
 use App\Http\Controllers\LaporanController;
+use App\Http\Controllers\PelangganController;
 
 /*
 |--------------------------------------------------------------------------
@@ -35,14 +36,17 @@ Route::resource('produk', ProdukController::class);
 // tidak dianggap sebagai parameter {id}
 Route::delete('/laporan/delete-all-laporan', [LaporanController::class, 'deleteAllLaporan']);
 
-// 2. Route untuk mengambil data detail edit (sesuai method showEdit di controller)
-Route::get('/laporan/edit/{id}', [LaporanController::class, 'showEdit']);
-
-// 3. Resource Route Laporan
+// 2. Resource Route Laporan
 // Ini akan otomatis menghandle:
 // GET    /api/laporan          -> index()
 // POST   /api/laporan          -> store()
-// GET    /api/laporan/{id}     -> show() (jika ada)
+// GET    /api/laporan/{id}     -> show()
 // PUT    /api/laporan/{id}     -> update()
 // DELETE /api/laporan/{id}     -> destroy()
 Route::resource('laporan', LaporanController::class);
+
+
+// =================================================================
+// PELANGGAN ROUTES
+// =================================================================
+Route::resource('pelanggan', PelangganController::class);

@@ -249,7 +249,7 @@ const formatNumber = (value: number) => {
 
       <div v-else class="space-y-6 animate-in fade-in zoom-in duration-300">
 
-        <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <div class="grid gap-4 grid-cols-2">
           <div
             class="group relative overflow-hidden rounded-xl border bg-card p-6 transition-all hover:shadow-xl hover:shadow-blue-500/10">
             <div

@@ -7,6 +7,7 @@ use Inertia\Inertia;
 
 // 1. Halaman Depan (Welcome)
 Route::get('/', function () {
+    // Jika user sudah login, lempar ke Home
     if (auth('web')->check()) {
         return redirect()->route('home');
     }
@@ -19,7 +20,7 @@ Route::get('/', function () {
     ]);
 });
 
-// 2. Group Middleware
+// 2. Group Middleware (Wajib Login)
 Route::middleware(['auth', 'verified'])->group(function () {
 
     // Menu Dashboard / Home
@@ -27,9 +28,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
         return Inertia::render('Home');
     })->name('home');
 
-    Route::get('/dashboard', function () {
-        return view('dashboard');
-    })->name('dashboard');
+    // Menu Pelanggan`
+    Route::get('/pelanggan', function () {
+        return Inertia::render('Pelanggan');
+    })->name('pelanggan');
 
     // Menu Kalkulator
     Route::get('/kalkulator', function () {
@@ -47,20 +49,16 @@ Route::middleware(['auth', 'verified'])->group(function () {
     })->name('laporan');
 
     // Menu Edit Laporan
-    Route::get('/laporan/{id}/edit', function ($id) {
-        return Inertia::render('LaporanEdit', ['id' => $id]);
-    })->name('laporan.edit');
+    Route::get('/laporan/{id}/edit', [\App\Http\Controllers\LaporanController::class, 'edit'])->name('laporan.edit');
 
-    // Profile Routes (Mengarah ke Controller)
-    // Note: Logika database ada di DALAM file ProfileController, bukan di sini.
+    // Profile Routes
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
     // Logout
     Route::post('/logout', [\App\Http\Controllers\Auth\AuthenticatedSessionController::class, 'destroy'])->name('logout');
-
 });
 
-// Load route auth bawaan Breeze (Login, Register, Logout)
+// Load auth routes
 require __DIR__.'/auth.php';

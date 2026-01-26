@@ -386,7 +386,7 @@ onMounted(fetchSemuaLaporan);
                                         <Eye class="h-5 w-5" />
                                     </button>
 
-                                    <Link :href="`/api/laporan/edit/${trx.id_transaksi}`"
+                                    <Link :href="`/laporan/${trx.id_transaksi}/edit`"
                                         class="text-blue-600 hover:text-blue-800 transition-colors tooltip"
                                         title="Edit Penawaran">
                                         <Edit class="h-5 w-5" />

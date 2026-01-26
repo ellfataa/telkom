@@ -3,24 +3,22 @@ import { ref, computed } from 'vue';
 import { Link, router, usePage } from '@inertiajs/vue3';
 import {
     Calculator, FileText, Home, LogOut,
-    ShoppingBasket, User, Menu, X
+    ShoppingBasket, User, Menu, X, Users // Gunakan Users icon biar beda dikit
 } from 'lucide-vue-next';
 
-// Mengambil URL saat ini untuk menandai menu aktif
 const page = usePage();
 const currentUrl = computed(() => page.url);
 
-// Mengambil nama user dari database
 const userName = computed(() => {
     return page.props.auth?.user?.name || 'User';
 });
 
-// Fungsi untuk mengecek apakah route aktif
+// Helper untuk active state
+// Menggunakan startsWith agar sub-halaman juga dianggap aktif (misal /pelanggan/create)
 const isActive = (route: string) => {
     return currentUrl.value === route || currentUrl.value.startsWith(route + '/');
 };
 
-// State untuk Sidebar Mobile (Optional jika ingin responsive)
 const isSidebarOpen = ref(false);
 
 const handleLogout = () => {
@@ -29,9 +27,7 @@ const handleLogout = () => {
 </script>
 
 <template>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-
-    <div class="flex min-h-screen bg-gray-50 font-['Plus_Jakarta_Sans',sans-serif]">
+    <div class="flex min-h-screen bg-gray-50 font-['Inter',sans-serif]">
 
         <aside
             class="w-72 bg-white border-r border-gray-200 flex flex-col fixed inset-y-0 left-0 z-30 transform transition-transform duration-300 lg:translate-x-0 lg:static shadow-sm"
@@ -39,8 +35,8 @@ const handleLogout = () => {
         >
             <div class="h-20 flex items-center gap-3 px-6 border-b border-gray-100">
                 <div class="relative w-10 h-10 flex items-center justify-center">
-                    <div class="relative w-full h-full bg-transparent rounded-xl flex items-center justify-center text-white font-bold text-xl shadow-lg shadow-red-500/20">
-                        <img src="/image/logo-telkom.png" alt="Logo Telkom Indonesia" class="w-6 h-6"/>
+                    <div class="relative w-full h-full bg-red-600 rounded-xl flex items-center justify-center text-white font-bold text-xl shadow-lg shadow-red-500/20">
+                        T
                     </div>
                 </div>
                 <div>
@@ -59,27 +55,27 @@ const handleLogout = () => {
                 <div>
                     <p class="px-4 text-xs font-bold uppercase tracking-wider text-gray-400 mb-3">Menu Utama</p>
                     <nav class="space-y-1">
-                        <Link href="/"
+                        <Link href="/home"
                             class="flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-xl transition-all duration-200 group"
-                            :class="isActive('/') && currentUrl === '/'
-                                ? 'bg-red-50 text-red-700 shadow-sm'
-                                : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'"
+                            :class="isActive('/home') ? 'bg-red-50 text-red-700 shadow-sm' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'"
                         >
-                            <Home class="h-5 w-5 transition-colors"
-                                :class="isActive('/') && currentUrl === '/' ? 'text-red-600' : 'text-gray-400 group-hover:text-gray-600'"
-                            />
+                            <Home class="h-5 w-5 transition-colors" :class="isActive('/home') ? 'text-red-600' : 'text-gray-400 group-hover:text-gray-600'" />
                             Dashboard
+                        </Link>
+
+                        <Link href="/pelanggan"
+                            class="flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-xl transition-all duration-200 group"
+                            :class="isActive('/pelanggan') ? 'bg-red-50 text-red-700 shadow-sm' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'"
+                        >
+                            <User class="h-5 w-5 transition-colors" :class="isActive('/pelanggan') ? 'text-red-600' : 'text-gray-400 group-hover:text-gray-600'" />
+                            Pelanggan
                         </Link>
 
                         <Link href="/kalkulator"
                             class="flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-xl transition-all duration-200 group"
-                            :class="isActive('/kalkulator')
-                                ? 'bg-red-50 text-red-700 shadow-sm'
-                                : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'"
+                            :class="isActive('/kalkulator') ? 'bg-red-50 text-red-700 shadow-sm' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'"
                         >
-                            <Calculator class="h-5 w-5 transition-colors"
-                                :class="isActive('/kalkulator') ? 'text-red-600' : 'text-gray-400 group-hover:text-gray-600'"
-                            />
+                            <Calculator class="h-5 w-5 transition-colors" :class="isActive('/kalkulator') ? 'text-red-600' : 'text-gray-400 group-hover:text-gray-600'" />
                             Kalkulator
                         </Link>
                     </nav>
@@ -90,25 +86,17 @@ const handleLogout = () => {
                     <nav class="space-y-1">
                         <Link href="/produk"
                             class="flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-xl transition-all duration-200 group"
-                            :class="isActive('/produk')
-                                ? 'bg-red-50 text-red-700 shadow-sm'
-                                : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'"
+                            :class="isActive('/produk') ? 'bg-red-50 text-red-700 shadow-sm' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'"
                         >
-                            <ShoppingBasket class="h-5 w-5 transition-colors"
-                                :class="isActive('/produk') ? 'text-red-600' : 'text-gray-400 group-hover:text-gray-600'"
-                            />
+                            <ShoppingBasket class="h-5 w-5 transition-colors" :class="isActive('/produk') ? 'text-red-600' : 'text-gray-400 group-hover:text-gray-600'" />
                             Produk
                         </Link>
 
                         <Link href="/laporan"
                             class="flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-xl transition-all duration-200 group"
-                            :class="isActive('/laporan')
-                                ? 'bg-red-50 text-red-700 shadow-sm'
-                                : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'"
+                            :class="isActive('/laporan') ? 'bg-red-50 text-red-700 shadow-sm' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'"
                         >
-                            <FileText class="h-5 w-5 transition-colors"
-                                :class="isActive('/laporan') ? 'text-red-600' : 'text-gray-400 group-hover:text-gray-600'"
-                            />
+                            <FileText class="h-5 w-5 transition-colors" :class="isActive('/laporan') ? 'text-red-600' : 'text-gray-400 group-hover:text-gray-600'" />
                             Laporan Penawaran
                         </Link>
                     </nav>
@@ -126,28 +114,21 @@ const handleLogout = () => {
             </div>
         </aside>
 
-        <div
-            v-if="isSidebarOpen"
-            @click="isSidebarOpen = false"
-            class="fixed inset-0 bg-black/50 z-20 lg:hidden backdrop-blur-sm"
-        ></div>
+        <div v-if="isSidebarOpen" @click="isSidebarOpen = false" class="fixed inset-0 bg-black/50 z-20 lg:hidden backdrop-blur-sm"></div>
 
         <div class="flex-1 flex flex-col min-w-0 overflow-hidden">
-
             <header class="h-20 flex items-center justify-between px-6 bg-white/80 backdrop-blur-md border-b border-gray-200 sticky top-0 z-10">
                 <div class="flex items-center gap-4">
                     <button @click="isSidebarOpen = true" class="p-2 text-gray-500 hover:bg-gray-100 rounded-lg lg:hidden">
                         <Menu class="w-6 h-6" />
                     </button>
-
                     <div>
                         <h1 class="text-xl font-bold text-gray-800 tracking-tight">Selamat Datang, {{ userName }}</h1>
                     </div>
                 </div>
-
                 <div class="flex items-center gap-3">
                     <div class="w-10 h-10 rounded-full bg-gray-100 border border-gray-200 flex items-center justify-center text-gray-600 font-bold">
-                        A
+                        {{ userName.charAt(0).toUpperCase() }}
                     </div>
                 </div>
             </header>
@@ -162,30 +143,9 @@ const handleLogout = () => {
 </template>
 
 <style scoped>
-/* Custom Scrollbar untuk Sidebar */
-.custom-scrollbar::-webkit-scrollbar {
-    width: 4px;
-}
-.custom-scrollbar::-webkit-scrollbar-track {
-    background: transparent;
-}
-.custom-scrollbar::-webkit-scrollbar-thumb {
-    background-color: #e5e7eb;
-    border-radius: 20px;
-}
-
-.animate-fade-in-up {
-    animation: fadeInUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-}
-
-@keyframes fadeInUp {
-    from {
-        opacity: 0;
-        transform: translateY(10px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
+.custom-scrollbar::-webkit-scrollbar { width: 4px; }
+.custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+.custom-scrollbar::-webkit-scrollbar-thumb { background-color: #e5e7eb; border-radius: 20px; }
+.animate-fade-in-up { animation: fadeInUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+@keyframes fadeInUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 </style>

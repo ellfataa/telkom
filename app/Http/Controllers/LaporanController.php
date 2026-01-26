@@ -246,6 +246,104 @@ class LaporanController extends Controller
         }
     }
 
+    public function edit($id)
+    {
+        try {
+            // Ambil data laporan berdasarkan id
+            $data = DB::select("
+                SELECT
+                    t.id_transaksi AS id_laporan,
+                    t.netdiskon,
+                    t.total_harga,
+                    t.created_at,
+                    t.updated_at,
+                    t.pelanggan,
+                    -- Transaksi Children --
+                    tc.id_produk,
+                    tc.nama_produk,
+                    tc.harga_produk,
+                    tc.jumlah,
+                    tc.durasi,
+                    tc.harga_otc,
+                    tc.diskon_produk,
+                    tc.diskon_otc,
+                    tc.nominal_diskon_produk,
+                    tc.nominal_diskon_otc,
+                    tc.ppn_produk,
+                    tc.ppn_otc,
+                    tc.produk_final,
+                    tc.otc_final,
+                    tc.subtotal,
+                    tc.bandwidth,
+                    p.kategori
+                FROM transaksi t
+                LEFT JOIN transaksi_children tc ON t.id_transaksi = tc.id_laporan
+                LEFT JOIN produk p ON tc.id_produk = p.id_produk
+                WHERE t.id_transaksi = ?
+            ", [$id]);
+
+            return Inertia::render('LaporanEdit', [
+                'id_transaksi' => $id,
+                'transaksi_lama' => $data
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Gagal mengambil data: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function show($id)
+    {
+        try {
+            // API endpoint untuk fetch data laporan
+            $data = DB::select("
+                SELECT
+                    t.id_transaksi AS id_laporan,
+                    t.netdiskon,
+                    t.total_harga,
+                    t.created_at,
+                    t.updated_at,
+                    t.pelanggan,
+                    -- Transaksi Children --
+                    tc.id_produk,
+                    tc.nama_produk,
+                    tc.harga_produk,
+                    tc.jumlah,
+                    tc.durasi,
+                    tc.harga_otc,
+                    tc.diskon_produk,
+                    tc.diskon_otc,
+                    tc.nominal_diskon_produk,
+                    tc.nominal_diskon_otc,
+                    tc.ppn_produk,
+                    tc.ppn_otc,
+                    tc.produk_final,
+                    tc.otc_final,
+                    tc.subtotal,
+                    tc.bandwidth,
+                    p.kategori
+                FROM transaksi t
+                LEFT JOIN transaksi_children tc ON t.id_transaksi = tc.id_laporan
+                LEFT JOIN produk p ON tc.id_produk = p.id_produk
+                WHERE t.id_transaksi = ?
+            ", [$id]);
+
+            return response()->json([
+                'status' => 'success',
+                'data' => $data
+            ], 200);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Gagal mengambil data: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
     public function deleteAllLaporan()
     {
         // TRUNCATE TABLE ... CASCADE adalah syntax PostgreSQL.

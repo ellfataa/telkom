@@ -2,8 +2,8 @@
 import Sidebar from '@/components/Sidebar.vue';
 import Button from '@/components/ui/button/Button.vue';
 import axios from 'axios';
-import { FileText, Plus, X } from 'lucide-vue-next';
-import { computed, onMounted, ref } from 'vue';
+import { FileText, Plus, X, Search, ChevronDown, User } from 'lucide-vue-next'; // Tambah User icon
+import { computed, onMounted, ref, watch } from 'vue';
 
 // Interface
 interface Produk {
@@ -29,6 +29,12 @@ interface Keranjang {
     diskon_produk_rp: number;
     diskon_otc: number;
     diskon_otc_rp: number
+}
+
+// Interface Pelanggan (BARU)
+interface Pelanggan {
+    id_pelanggan: number;
+    nama_pelanggan: string;
 }
 
 // Reactive State (Ref)
@@ -66,6 +72,10 @@ const isSubmitting = ref(false);
 const namaPelanggan = ref('');
 const showModalPelanggan = ref(false);
 
+// State Pelanggan (BARU)
+const listPelanggan = ref<Pelanggan[]>([]);
+const showDropdownPelanggan = ref(false);
+
 // Function Kolom Tambah Produk ke Keranjang
 const tambahKeTabel = async () => {
     const produkCocok = daftarProduk.value.find(p =>
@@ -80,7 +90,7 @@ const tambahKeTabel = async () => {
     }
 
     // 2. Memasukan data ke daftar keranjang
-    await daftarKeranjang.value.push({
+    daftarKeranjang.value.push({
         id_produk: formData.value.id_produk,
         nama_produk: formData.value.nama_produk,
         bandwidth: formData.value.bandwidth,
@@ -97,7 +107,7 @@ const tambahKeTabel = async () => {
         diskon_otc_rp: 0,
     });
 
-    await alert(`Produk  ${formData.value.nama_produk} (${formData.value.bandwidth}Mbps) berhasil ditambahkan!`)
+    alert(`Produk  ${formData.value.nama_produk} (${formData.value.bandwidth}Mbps) berhasil ditambahkan!`)
 
     searchQuery.value = '';
     searchBandWidth.value = '';
@@ -266,6 +276,15 @@ const closeModal = () => {
     searchQuery.value = '';
     searchBandWidth.value = '';
     showModal.value = false;
+};
+
+// [BARU] Function Cek Keranjang Sebelum Simpan
+const cekKeranjangSebelumSimpan = () => {
+    if (daftarKeranjang.value.length === 0) {
+        alert("Harap mengisi/tambah produk dahulu sebelum simpan laporan penawaran!");
+        return;
+    }
+    showModalPelanggan.value = true;
 };
 
 // Function search modal
@@ -452,9 +471,30 @@ const ruleDiskonOtc = (item: any, event: any) => {
     item.diskon_otc = val == '' ? 0 : Number(val);
 }
 
-onMounted(() => {
-    fetchProducts();
+// ==========================================
+// FUNGSI BARU UNTUK PELANGGAN
+// ==========================================
+
+const fetchPelanggan = async () => {
+    try {
+        const response = await axios.get('/api/pelanggan');
+        listPelanggan.value = response.data.data;
+    } catch (e) {
+        console.error("Gagal load pelanggan:", e);
+    }
+};
+
+const filteredPelanggan = computed(() => {
+    if (!namaPelanggan.value) return listPelanggan.value.slice(0, 5);
+    return listPelanggan.value.filter(p =>
+        p.nama_pelanggan.toLowerCase().includes(namaPelanggan.value.toLowerCase())
+    ).slice(0, 5);
 });
+
+const selectPelanggan = (nama: string) => {
+    namaPelanggan.value = nama;
+    showDropdownPelanggan.value = false;
+};
 
 // HELPER METHODS
 const formatCurrency = (value: number) => {
@@ -464,6 +504,11 @@ const formatCurrency = (value: number) => {
         minimumFractionDigits: 0,
     }).format(value);
 };
+
+onMounted(() => {
+    fetchProducts();
+    fetchPelanggan(); // <-- Added This
+});
 </script>
 
 <template>
@@ -472,8 +517,7 @@ const formatCurrency = (value: number) => {
             <div class="flex items-center justify-between">
                 <div>
                     <h2 class="text-2xl font-bold">Kalkulator Penawaran</h2>
-                    <!-- <p class="mt-1 text-sm text-muted-foreground">Kelola semua produk Anda di sini</p> -->
-                </div>
+                    </div>
                 <button @click="openAddModal"
                     class="flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-white transition-colors hover:bg-blue-700">
                     <Plus class="h-4 w-4" />
@@ -481,7 +525,6 @@ const formatCurrency = (value: number) => {
                 </button>
             </div>
 
-            <!-- Table -->
             <div class="overflow-hidden rounded-lg border bg-card">
                 <div class="overflow-x-auto">
                     <table class="w-full">
@@ -589,7 +632,7 @@ const formatCurrency = (value: number) => {
                                 </td>
                                 <td class="px-6 py-4 text-sm whitespace-nowrap">
                                     {{ formatCurrency(getDiskonProduk(item.harga_produk, item.kuantitas
-                                        , item.diskon_produk)) }}
+                                    , item.diskon_produk)) }}
                                 </td>
 
                                 <td class="px-6 py-4 text-sm whitespace-nowrap">
@@ -634,12 +677,11 @@ const formatCurrency = (value: number) => {
                                     Keseluruhan (Grand Total) :</td>
                                 <td class="px-6 py-4 text-start whitespace-nowrap text-blue-700">
                                     <p>Tanpa PPN:
-                                         {{ formatCurrency(totalKeseluruhan * 0.89) }}
+                                        {{ formatCurrency(totalKeseluruhan*0.89) }}
                                     </p>
                                     <p>
                                         Termasuk PPN:
-                                         {{ formatCurrency(totalKeseluruhan) }}
-
+                                        {{ formatCurrency(totalKeseluruhan) }}
                                     </p>
                                 </td>
                                 <td class="px-6 py-4 text-center whitespace-nowrap text-blue-700">
@@ -655,7 +697,7 @@ const formatCurrency = (value: number) => {
             </div>
 
             <div class="flex items-center justify-between">
-                <button @click="showModalPelanggan = true"
+                <button @click="cekKeranjangSebelumSimpan"
                     class="flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-white transition-colors hover:bg-blue-700">
                     <FileText class="h-4 w-4" />
                     <span class="font-medium">Simpan Laporan Penawaran</span>
@@ -663,19 +705,47 @@ const formatCurrency = (value: number) => {
             </div>
 
             <div v-if="showModalPelanggan"
-                class="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 p-4">
-                <div class="w-full max-w-sm rounded-lg bg-white p-6 shadow-xl">
+                class="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 p-4" @click.self="showModalPelanggan = false">
+                <div class="w-full max-w-sm rounded-lg bg-white p-6 shadow-xl relative" @click.self="showDropdownPelanggan = false">
                     <h3 class="mb-4 text-lg font-bold">Konfirmasi Laporan Penawaran</h3>
                     <label class="mb-2 block text-sm font-medium">Nama Pelanggan :</label>
-                    <input v-model="namaPelanggan" type="text"
-                        class="w-full rounded-lg border p-2 outline-none focus:ring-2 focus:ring-blue-500"
-                        placeholder="Masukkan nama pelanggan..." />
+
+                    <div class="relative">
+                        <div class="relative">
+                            <input
+                                v-model="namaPelanggan"
+                                type="text"
+                                @focus="showDropdownPelanggan = true"
+                                class="w-full rounded-lg border p-2 pr-10 outline-none focus:ring-2 focus:ring-blue-500"
+                                placeholder="Ketik baru atau pilih..."
+                                autocomplete="off"
+                            />
+                            <ChevronDown class="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
+                        </div>
+
+                        <div v-if="showDropdownPelanggan && filteredPelanggan.length > 0"
+                             class="absolute z-10 mt-1 w-full max-h-48 overflow-y-auto rounded-md border bg-white shadow-lg">
+                            <ul>
+                                <li v-for="p in filteredPelanggan" :key="p.id_pelanggan"
+                                    @click="selectPelanggan(p.nama_pelanggan)"
+                                    class="cursor-pointer px-4 py-2 hover:bg-blue-50 text-sm text-gray-700 border-b border-gray-100 last:border-0 flex items-center gap-2">
+                                    <User class="h-3 w-3 text-gray-400" />
+                                    {{ p.nama_pelanggan }}
+                                </li>
+                            </ul>
+                        </div>
+                        <div v-else-if="showDropdownPelanggan && namaPelanggan" class="absolute z-10 mt-1 w-full p-2 bg-white border rounded shadow text-xs text-gray-500">
+                            Tekan simpan untuk menggunakan nama baru ini.
+                        </div>
+                    </div>
 
                     <div class="mt-6 flex gap-3">
                         <button @click="showModalPelanggan = false"
                             class="flex-1 rounded-lg border py-2 hover:bg-gray-50">Batal</button>
                         <button @click="tambahLaporanPenawaran"
-                            class="flex-1 rounded-lg bg-blue-600 py-2 text-white hover:bg-blue-700">Simpan</button>
+                            class="flex-1 rounded-lg bg-blue-600 py-2 text-white hover:bg-blue-700" :disabled="isSubmitting">
+                            {{ isSubmitting ? 'Menyimpan...' : 'Simpan' }}
+                        </button>
                     </div>
                 </div>
             </div>
@@ -761,7 +831,7 @@ const formatCurrency = (value: number) => {
                         ? 'bg-gray-400 cursor-not-allowed'
                         : 'bg-blue-600 hover:bg-blue-700'
                 ]"
-                    class="flex-1 rounded-lg px-3 py-1.5 text-sm text-white transition-colors sm:px-4 sm:py-2 sm:text-base">
+                    class="flex-1 rounded-lg px-3 py-1.5 text-white transition-colors sm:px-4 sm:py-2 sm:text-base">
                     Tambah Produk
                 </button>
             </div>
